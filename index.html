@@ -128,12 +128,12 @@ button{font:inherit;color:inherit;cursor:pointer}
 .hud:hover{border-color:rgba(168,255,46,.38)}
 
 /* ---------- Hero ---------- */
-.hero{position:relative;overflow:hidden;padding:clamp(40px,7vw,96px) 0 clamp(56px,8vw,110px)}
+.hero{position:relative;overflow:hidden;padding:clamp(32px,4.5vw,64px) 0 clamp(56px,8vw,100px)}
 .hero .mark-bg{position:absolute;width:min(820px,130vw);aspect-ratio:1;left:-16%;top:50%;color:var(--rad);opacity:.045;pointer-events:none;animation:spinY 140s linear infinite}
 @keyframes spinY{from{transform:translateY(-50%) rotate(0)}to{transform:translateY(-50%) rotate(360deg)}}
 @keyframes spin{to{transform:rotate(360deg)}}
 .hero .wrap{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.02fr);gap:clamp(28px,5vw,72px);align-items:center}
-.hero-tags{display:flex;align-items:center;gap:16px;margin-bottom:26px}
+.hero-tags{display:flex;align-items:center;gap:18px;margin-bottom:20px}
 /* Interactive coin: front = the logo, back = an engraved message */
 .coin{--s:148px;position:relative;width:var(--s);height:var(--s);flex-shrink:0;padding:0;border:0;background:none;border-radius:50%;perspective:900px;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .coin::before{content:"";position:absolute;inset:-18%;border-radius:50%;background:radial-gradient(closest-side,rgba(168,255,46,.32),transparent 72%);filter:blur(8px);pointer-events:none;animation:breathe 4s ease-in-out infinite}
@@ -163,19 +163,19 @@ button{font:inherit;color:inherit;cursor:pointer}
 .emblem{display:flex;flex-direction:column;gap:4px;font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 .emblem strong{display:flex;align-items:center;gap:8px;color:var(--hazard);font-weight:700}
 .emblem strong svg{width:18px;height:18px}
-.hero h1{font-family:var(--stencil);font-weight:900;font-size:clamp(48px,7.2vw,104px);line-height:1.02;letter-spacing:.025em;word-spacing:.08em;text-transform:uppercase;margin:0 0 30px;text-wrap:balance}
+.hero h1{font-family:var(--stencil);font-weight:900;font-size:clamp(44px,5.6vw,80px);line-height:1.02;letter-spacing:.025em;word-spacing:.08em;text-transform:uppercase;margin:0 0 24px;text-wrap:balance}
 .hero h1 .num{position:relative;display:inline-block;color:var(--rad);font-size:1.35em;line-height:1;margin-top:18px;text-shadow:0 0 18px var(--rad-glow),0 0 70px rgba(168,255,46,.35)}
 .hero h1 .num::before,.hero h1 .num::after{content:attr(data-text);position:absolute;inset:0;pointer-events:none;text-shadow:none}
 .hero h1 .num::before{color:var(--cyan);opacity:.55;mix-blend-mode:screen;animation:glitchA 4.2s infinite steps(1)}
 .hero h1 .num::after{color:var(--hazard);opacity:.45;mix-blend-mode:screen;animation:glitchB 4.2s infinite steps(1)}
 @keyframes glitchA{0%,88%,100%{transform:none;clip-path:inset(0 0 100% 0)}89%{transform:translate(-4px,1px);clip-path:inset(12% 0 58% 0)}91%{transform:translate(3px,-1px);clip-path:inset(62% 0 8% 0)}93%{transform:translate(-2px,0);clip-path:inset(35% 0 40% 0)}}
 @keyframes glitchB{0%,88%,100%{transform:none;clip-path:inset(0 0 100% 0)}90%{transform:translate(4px,-1px);clip-path:inset(48% 0 22% 0)}92%{transform:translate(-3px,1px);clip-path:inset(4% 0 76% 0)}}
-.lede{font-size:clamp(17px,1.6vw,19.5px);color:var(--muted);max-width:47ch;margin:0 0 30px}
+.lede{font-size:clamp(17px,1.5vw,19px);color:var(--muted);max-width:54ch;margin:0 0 26px}
 .lede b{color:var(--ink);font-weight:600}
 .cta{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:28px}
 .demo-note{display:flex;gap:10px;align-items:center;font-family:var(--mono);font-size:12.5px;color:var(--muted);max-width:52ch;margin:0}
 .demo-note::before{content:"";width:8px;height:8px;flex-shrink:0;border-radius:50%;background:var(--rad);box-shadow:0 0 10px var(--rad);animation:blink 1.6s steps(2) infinite}
-.setup{background:var(--hazard-soft);border:1px solid var(--hazard);border-left-width:4px;padding:14px 18px;margin:0 0 20px;font-size:14.5px;border-radius:2px}
+.setup{background:var(--hazard-soft);border:1px solid rgba(255,210,31,.5);border-left:4px solid var(--hazard);padding:12px 16px;margin:22px 0 0;font-size:14px;border-radius:2px;max-width:52ch}
 .setup code{font-family:var(--mono);font-size:13px;background:rgba(0,0,0,.35);padding:2px 6px;border-radius:2px;color:var(--hazard)}
 .err{background:rgba(255,90,71,.1);border:1px solid var(--danger);border-left-width:4px;color:#FFC2B8;padding:14px 18px;margin:0 0 20px;font-size:14.5px;border-radius:2px}
 
@@ -282,6 +282,8 @@ section{position:relative;padding:clamp(64px,9vw,120px) 0}
 .gauge .v{font-family:var(--display);font-weight:800;font-size:clamp(30px,3.3vw,44px);line-height:1.05;font-variant-numeric:tabular-nums;margin-top:10px;overflow-wrap:anywhere}
 .gauge .s{font-size:13px;color:var(--muted)}
 .gauge .v.bump{color:var(--hazard);transition:color 1.2s}
+/* placeholder shown until live data arrives (replaced by the first real value) */
+.ph{display:inline-block;font-family:var(--mono);font-size:14px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);padding:6px 0 4px}
 .panel-grid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:14px;margin-top:14px}
 .box{padding:24px}
 .box h3{margin:0 0 4px;font-family:var(--display);font-weight:800;font-size:26px;text-transform:uppercase;letter-spacing:.02em}
@@ -296,7 +298,9 @@ section{position:relative;padding:clamp(64px,9vw,120px) 0}
 .wallets li:last-child{border-bottom:0}
 .wallets .n{font-weight:600}
 .wallets .a{grid-column:1;font-family:var(--mono);font-size:12px;color:var(--muted);word-break:break-all}
-.wallets button{grid-row:1 / span 2;grid-column:2}
+.wallets button,.wallets .tag{grid-row:1 / span 2;grid-column:2}
+.wallets .pending .a{word-break:normal}
+.wallets .tag{font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--hazard);border:1px dashed rgba(255,210,31,.45);padding:5px 9px;border-radius:2px;white-space:nowrap}
 
 /* How it works */
 .steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
@@ -480,7 +484,7 @@ footer nav a:hover{color:var(--rad)}
     </nav>
     <a class="social" href="https://x.com/T0KEN92" target="_blank" rel="noopener" aria-label="TOKEN 92 on X (@T0KEN92)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
     <div class="status" id="status" data-s="stable" role="status" aria-live="polite"><i></i><span>Core stable</span></div>
-    <a href="#comprar" class="btn btn-main btn-sm">Buy $T92</a>
+    <a href="#comprar" class="btn btn-main btn-sm" id="topCta">Buy $T92</a>
     <button class="menu-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="nav"><span></span></button>
   </div>
 </header>
@@ -498,7 +502,6 @@ footer nav a:hover{color:var(--rad)}
   <svg class="mark-bg" aria-hidden="true"><use href="#trefoil"/></svg>
   <div class="wrap">
     <div class="hero-copy">
-      <div class="setup" id="setupBox" hidden><b>Pre-launch.</b> The reactor goes live with the token. The official contract will be published here and on <a class="handle" href="https://x.com/T0KEN92" target="_blank" rel="noopener">@T0KEN92</a>, nowhere else.</div>
       <div class="err" id="errBox" hidden></div>
       <div class="hero-tags">
         <!-- some doors only open when you spin them -->
@@ -534,10 +537,11 @@ footer nav a:hover{color:var(--rad)}
       <h1>The reactor powered by the community <span class="num" data-text="$T92">$T92</span></h1>
       <p class="lede">Uranium's atomic number is 92. Our core has <b>92 fuel rods</b>. Every buy lights one up, and when the core hits 92% the <b>Fission</b> happens: a public token burn, with the transaction in plain sight for everyone.</p>
       <div class="cta">
-        <a href="#comprar" class="btn btn-main">Buy $T92 <span class="arr">→</span></a>
+        <a href="#comprar" class="btn btn-main" id="heroCta">Buy $T92 <span class="arr">→</span></a>
         <a href="#como-funciona" class="btn btn-ghost">See how it works</a>
       </div>
       <p class="demo-note"><span id="heroNote">Connecting to the blockchain…</span></p>
+      <div class="setup" id="setupBox" hidden><b>Pre-launch.</b> The official contract will be published here and on <a class="handle" href="https://x.com/T0KEN92" target="_blank" rel="noopener">@T0KEN92</a>, nowhere else. Anything else is a fake.</div>
     </div>
 
     <div class="core-wrap">
@@ -545,7 +549,7 @@ footer nav a:hover{color:var(--rad)}
         <div class="core-head">
           <div class="core-id"><b>Core R-92</b>Live telemetry</div>
           <div class="price-ticker" id="priceTicker" data-dir="flat">
-            <span class="price-usd" id="priceUsd">—</span>
+            <span class="price-usd" id="priceUsd"><span class="ph">$T92</span></span>
             <span class="price-chg" id="priceChg">waiting for price…</span>
           </div>
         </div>
@@ -603,16 +607,16 @@ footer nav a:hover{color:var(--rad)}
       <p>Everything happening in the reactor, in numbers anyone can verify on the blockchain.</p>
     </div>
     <div class="gauges rv" id="priceGauges">
-      <div class="gauge hud"><div class="k">Price</div><div class="v" id="pPrice">—</div><div class="s" id="pPriceSub">waiting for a trading pair</div></div>
-      <div class="gauge hud"><div class="k">24h change</div><div class="v" id="pChg">—</div><div class="s">since this time yesterday</div></div>
-      <div class="gauge hud"><div class="k">24h volume</div><div class="v" id="pVol">—</div><div class="s">traded in the last 24h</div></div>
-      <div class="gauge hud"><div class="k">Liquidity</div><div class="v" id="pLiq">—</div><div class="s" id="pMcap">—</div></div>
+      <div class="gauge hud"><div class="k">Price</div><div class="v" id="pPrice"><span class="ph">offline</span></div><div class="s" id="pPriceSub">live once trading opens</div></div>
+      <div class="gauge hud"><div class="k">24h change</div><div class="v" id="pChg"><span class="ph">offline</span></div><div class="s">since this time yesterday</div></div>
+      <div class="gauge hud"><div class="k">24h volume</div><div class="v" id="pVol"><span class="ph">offline</span></div><div class="s">traded in the last 24h</div></div>
+      <div class="gauge hud"><div class="k">Liquidity</div><div class="v" id="pLiq"><span class="ph">offline</span></div><div class="s" id="pMcap">market cap shown here</div></div>
     </div>
     <div class="gauges rv">
-      <div class="gauge hud"><div class="k">Circulating supply</div><div class="v" id="gSupply">—</div><div class="s" id="gSupplySub">—</div></div>
-      <div class="gauge hud"><div class="k">Total burned</div><div class="v" id="gBurn">—</div><div class="s" id="gBurnPct">—</div></div>
-      <div class="gauge hud"><div class="k">Fissions found</div><div class="v" id="gFis">—</div><div class="s">in the mint's recent transactions</div></div>
-      <div class="gauge hud"><div class="k">Treasury balance</div><div class="v" id="gBuys">—</div><div class="s" id="gSol">target: —</div></div>
+      <div class="gauge hud"><div class="k">Circulating supply</div><div class="v" id="gSupply"><span class="ph">offline</span></div><div class="s" id="gSupplySub">of 1,000,000,000 initial</div></div>
+      <div class="gauge hud"><div class="k">Total burned</div><div class="v" id="gBurn"><span class="ph">offline</span></div><div class="s" id="gBurnPct">supply only goes down</div></div>
+      <div class="gauge hud"><div class="k">Fissions found</div><div class="v" id="gFis"><span class="ph">offline</span></div><div class="s">in the mint's recent transactions</div></div>
+      <div class="gauge hud"><div class="k">Treasury balance</div><div class="v" id="gBuys"><span class="ph">offline</span></div><div class="s" id="gSol">public burn wallet</div></div>
     </div>
     <div class="panel-grid rv">
       <div class="box hud">
@@ -758,6 +762,7 @@ footer nav a:hover{color:var(--rad)}
   <div class="wrap">
     <div class="sec-head rv"><span class="kicker">06 · FAQ</span><h2>Frequently <em>asked</em> questions</h2></div>
     <div class="faq rv">
+      <details class="hud"><summary>When does $T92 launch?</summary><p>The launch is announced first on <a class="handle" href="https://x.com/T0KEN92" target="_blank" rel="noopener">@T0KEN92</a>. The contract address appears on this site at the same moment, and this panel switches from pre-launch to live data on its own.</p></details>
       <details class="hud"><summary>Does Fission guarantee the price will go up?</summary><p>No. Fission reduces the circulating supply, but price depends purely on market supply and demand. $T92 is a memecoin and promises no returns.</p></details>
       <details class="hud"><summary>Where do the burned tokens come from?</summary><p>From a public treasury wallet, set aside at launch solely for burns. Anyone can check its balance.</p></details>
       <details class="hud"><summary>How do I know a burn actually happened?</summary><p>Every Fission publishes its transaction hash. Just paste the hash into Solscan or Solana Explorer and watch the tokens go to the burn address.</p></details>
@@ -1008,15 +1013,12 @@ function extractBuys(tx, sig){
 /* ---------- Public wallets ---------- */
 function renderWallets(){
   var rows = [
-    ['Burn treasury', CONFIG.TREASURY_ADDRESS],
-    ['Dev wallet', CONFIG.DEV_ADDRESS],
-    ['Liquidity', CONFIG.LIQUIDITY_ADDRESS]
-  ].filter(function(r){ return r[1]; });
-  if (!rows.length){
-    $('walletsList').innerHTML = '<li class="empty" style="padding:8px 0;color:var(--muted)">Addresses will be published at launch.</li>';
-    return;
-  }
+    ['Burn treasury', CONFIG.TREASURY_ADDRESS, 'Holds the tokens destroyed at each Fission'],
+    ['Dev wallet', CONFIG.DEV_ADDRESS, 'Tagged as creator on pump.fun'],
+    ['Liquidity', CONFIG.LIQUIDITY_ADDRESS, 'Trading pool once the curve graduates']
+  ];
   $('walletsList').innerHTML = rows.map(function(r){
+    if (!r[1]) return '<li class="pending"><span class="n">'+r[0]+'</span><span class="a">'+r[2]+'</span><span class="tag">at launch</span></li>';
     return '<li><span class="n">'+r[0]+'</span><span class="a">'+r[1]+'</span><button class="btn btn-ghost btn-sm" data-copy="'+r[1]+'">Copy</button></li>';
   }).join('');
 }
@@ -1027,8 +1029,15 @@ function renderChart(){
   var data = state.burns.slice(0,14).slice().reverse();
   svg.setAttribute('viewBox','0 0 '+W+' '+H);
   if (!data.length){
-    svg.innerHTML = '<line x1="'+pad+'" y1="'+(H-pad)+'" x2="'+(W-pad)+'" y2="'+(H-pad)+'" stroke="currentColor" stroke-opacity=".2"/>'+
-      '<text x="'+(W/2)+'" y="'+(H/2)+'" text-anchor="middle">'+(CONFIG.MINT_ADDRESS ? 'No burns yet' : 'First Fission happens after launch')+'</text>';
+    // ghost bars: a preview of what the chart will look like once burns happen
+    var ghost = '<line x1="'+pad+'" y1="'+(H-pad)+'" x2="'+(W-pad)+'" y2="'+(H-pad)+'" stroke="currentColor" stroke-opacity=".2"/>';
+    var gh = [.35,.5,.42,.62,.55,.72,.66,.8,.74,.9], gw = (W-pad*2)/gh.length;
+    gh.forEach(function(v,i){
+      var bh = v*(H-pad*2-20), gx = pad+i*gw+gw*.2;
+      ghost += '<rect x="'+gx.toFixed(1)+'" y="'+(H-pad-bh).toFixed(1)+'" width="'+(gw*.6).toFixed(1)+'" height="'+bh.toFixed(1)+'" rx="2" fill="none" stroke="currentColor" stroke-opacity=".22" stroke-dasharray="4 4"/>';
+    });
+    ghost += '<text x="'+(W/2)+'" y="24" text-anchor="middle">'+(CONFIG.MINT_ADDRESS ? 'No burns yet' : 'Each Fission adds a bar here')+'</text>';
+    svg.innerHTML = ghost;
     return;
   }
   var max = Math.max.apply(null,data.map(function(d){return d.amount;}))*1.12;
@@ -1174,8 +1183,14 @@ function refresh(){
   if (!CONFIG.MINT_ADDRESS){
     $('setupBox').hidden=false;
     setStatus('prelaunch','Pre-launch');
+    // nothing to buy yet: point the main calls to action at X instead
+    [['heroCta','Follow @T0KEN92 <span class="arr">→</span>'],['topCta','Follow on X']].forEach(function(c){
+      var a=$(c[0]); a.innerHTML=c[1]; a.href='https://x.com/T0KEN92'; a.target='_blank'; a.rel='noopener';
+    });
     $('heroNote').textContent='Reactor offline. Ignition at launch.';
     $('priceChg').textContent='pre-launch';
+    $('treasuryInline').textContent='0 $T92';
+    $('targetInline').textContent=nf.format(CONFIG.FISSION_VOLUME_TARGET)+' $T92';
     $('feed').innerHTML='<li class="empty">Awaiting ignition…</li>';
     renderWallets(); renderHistory(); renderChart();
     return;
