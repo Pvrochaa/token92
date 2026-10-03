@@ -172,7 +172,10 @@ function getOwnerTokenBalance(owner){
   });
 }
 function getSignatures(limit){ return rpc('getSignaturesForAddress',[CONFIG.MINT_ADDRESS,{limit:limit}]); }
-function getParsedTx(sig){ return rpc('getTransaction',[sig,{encoding:'jsonParsed',maxSupportedTransactionVersion:0}]); }
+// maxSupportedTransactionVersion is capped at 0 by default by most RPCs, but real
+// swaps commonly come back as newer versioned transactions — raise the cap so
+// those aren't silently dropped (returned as null and skipped).
+function getParsedTx(sig){ return rpc('getTransaction',[sig,{encoding:'jsonParsed',maxSupportedTransactionVersion:2}]); }
 function extractBurns(tx, sig){
   var out=[];
   if (!tx || !tx.transaction) return out;
@@ -202,25 +205,28 @@ function extractBuys(tx, sig){
   var keys = tx.transaction.message.accountKeys || [];
   var payerIdx = keys.findIndex(function(k){ return k && k.signer; });
   if (payerIdx<0) payerIdx = 0;
+  var payerPub = String(keys[payerIdx] && (keys[payerIdx].pubkey || keys[payerIdx]));
 
   var preSol = tx.meta.preBalances ? tx.meta.preBalances[payerIdx] : null;
   var postSol = tx.meta.postBalances ? tx.meta.postBalances[payerIdx] : null;
   if (preSol==null || postSol==null) return out;
   var solDelta = (postSol - preSol) / 1e9; // negative = the wallet spent SOL
 
-  function findBal(list, idx){
-    return (list||[]).find(function(b){ return b.accountIndex===idx && b.mint===CONFIG.MINT_ADDRESS; });
+  // Token balance entries are keyed by the token ACCOUNT's position in the
+  // transaction, not the wallet's — a wallet's own index almost never matches
+  // its (separate) associated token account. Match by owner instead.
+  function findBal(list){
+    return (list||[]).find(function(b){ return b.owner===payerPub && b.mint===CONFIG.MINT_ADDRESS; });
   }
-  var preT = findBal(tx.meta.preTokenBalances, payerIdx);
-  var postT = findBal(tx.meta.postTokenBalances, payerIdx);
+  var preT = findBal(tx.meta.preTokenBalances);
+  var postT = findBal(tx.meta.postTokenBalances);
   var preAmt = preT ? Number(preT.uiTokenAmount.uiAmount||0) : 0;
   var postAmt = postT ? Number(postT.uiTokenAmount.uiAmount||0) : 0;
   var tokenDelta = postAmt - preAmt;
 
   // -0.0005 SOL is just so the tiny network fee alone doesn't count as a "buy"
   if (solDelta < -0.0005 && tokenDelta > 0){
-    var payer = keys[payerIdx] && (keys[payerIdx].pubkey || keys[payerIdx]);
-    out.push({ amount:tokenDelta, sol:Math.abs(solDelta), signature:sig, time:tx.blockTime, wallet:String(payer) });
+    out.push({ amount:tokenDelta, sol:Math.abs(solDelta), signature:sig, time:tx.blockTime, wallet:payerPub });
   }
   return out;
 }
