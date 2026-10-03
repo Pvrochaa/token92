@@ -10,7 +10,7 @@ const CONFIG = {
   RPC_URL: "https://mainnet.helius-rpc.com/?api-key=4a95d1f4-043d-46ac-a4fa-e48b6a114b65",
 
   // Paste the $T92 mint address here once it exists (generated when you create it on pump.fun).
-  MINT_ADDRESS: "",
+  MINT_ADDRESS: "Ac63ucqtjLTmjhA1DjPZQM7T95q2tmVHJ8XffR9XWtYx",
 
   // PUBLIC addresses (not private keys). Leave "" for any you don't have yet.
   // They're shown on the site only after launch (MINT_ADDRESS set), and buys made
