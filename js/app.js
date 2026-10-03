@@ -67,11 +67,6 @@ const CONFIG = {
 /* =================== END OF CONFIGURATION =================== */
 
 var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-// Demo mode: only activates with ?demo in the URL, never for a normal visitor.
-// It fabricates every number on the page and labels itself clearly (cyan
-// "DEMO" badge + top banner) so it can never be mistaken for real trading
-// data, even if a demo link gets shared around.
-var demoMode = /[?&]demo(?:=|&|$)/.test(location.search);
 var nf = new Intl.NumberFormat('en-US');
 var nf1 = new Intl.NumberFormat('en-US',{minimumFractionDigits:1,maximumFractionDigits:1});
 var $ = function(id){return document.getElementById(id);};
@@ -710,134 +705,23 @@ try{
   console.log('%cYou looked under the hood. Most people never do.\nThe coin has two sides. The ninth time, it has three.', 'color:#8B9A86;font:12px/1.6 monospace');
 }catch(e){}
 
-/* ---------- Demo mode ----------
-   Fabricated, self-contained, never touches the network. Entirely fake
-   numbers so the dashboard can be shown off before $T92 actually trades,
-   without ever mixing invented figures into the real site. */
-function startDemo(){
-  document.body.classList.add('is-demo');
-  $('demoBanner').hidden = false;
-  setStatus('demo','Demo data');
-  $('heroNote').textContent = 'Demo data — not live. This is what the dashboard looks like once $T92 is trading.';
-  $('setupBox').hidden = true;
-  $('errBox').hidden = true;
-
-  var FAKE_CA = 'DEM0xNotARea1AddressxDoNotxSendxFundsxHere1';
-  $('caText').textContent = FAKE_CA;
-  $('caCopy').disabled = false;
-  $('caNote').textContent = 'Demo contract — fake, not a real address. Do not send funds to it.';
-  $('caLinks').hidden = true;
-  [['heroCta','Buy $T92 <span class="arr">→</span>'],['topCta','Buy $T92']].forEach(function(c){
-    var a=$(c[0]); a.innerHTML=c[1]; a.href='#comprar'; a.removeAttribute('target'); a.removeAttribute('rel');
-  });
-
-  $('gSupply').textContent = nf.format(812450000);
-  $('gSupplySub').textContent = 'of 1,000,000,000 initial';
-  $('gBurn').textContent = nf.format(187550000);
-  $('gBurnPct').textContent = '18.8% of supply';
-  $('gFis').textContent = 7;
-  $('gBuys').textContent = nf.format(3200000);
-  $('gSol').textContent = 'burn target: 10,000,000 $T92';
-
-  $('walletsList').innerHTML = [
-    ['Burn treasury', 'DEM0TreasuryFakeAddress1NotReal2DoNotUse34'],
-    ['Dev wallet',    'DEM0DevWalletFakeAddress1NotReal2DoNotUse'],
-    ['Liquidity',     'DEM0LiquidityFakeAddress1NotReal2DoNotUse']
-  ].map(function(r){
-    return '<li><span class="n">'+r[0]+'</span><span class="a">'+r[1]+'</span><button class="btn btn-ghost btn-sm" disabled>Copy</button></li>';
-  }).join('');
-
-  var now = Date.now()/1000;
-  var fakeBurns = [
-    {n:7, amount:10120000, sig:'DEM0sig7FakeNotARealTransactionSignature001', t:now-3600*2},
-    {n:6, amount:10045000, sig:'DEM0sig6FakeNotARealTransactionSignature002', t:now-3600*9},
-    {n:5, amount:10210000, sig:'DEM0sig5FakeNotARealTransactionSignature003', t:now-3600*20},
-    {n:4, amount:9980000,  sig:'DEM0sig4FakeNotARealTransactionSignature004', t:now-3600*31},
-    {n:3, amount:10330000, sig:'DEM0sig3FakeNotARealTransactionSignature005', t:now-3600*47}
-  ];
-  $('histBody').innerHTML = fakeBurns.map(function(f){
-    return '<div class="hist-row"><span class="c">#'+f.n+'</span>'+
-      '<span class="burn">'+nf.format(f.amount)+' $T92</span>'+
-      '<span class="tx"><code title="demo data, not a real signature">'+short(f.sig,6,6)+'</code><button disabled>Copy</button></span>'+
-      '<span class="t">'+relTime(f.t)+'</span></div>';
-  }).join('');
-  $('moreBtn').parentNode.style.display = 'none';
-  state.burns = fakeBurns.map(function(f){ return {amount:f.amount, signature:f.sig, time:f.t}; });
-  renderChart();
-
-  $('feed').innerHTML = ['7xKQ…g3Nf','Bz1m…aQ2c','pL9s…Yt4K','4Rk2…zVmQ','Qe8d…1fXp','N2vC…h7Lw'].map(function(s,i){
-    return '<li><span>'+s+'</span><b>'+(i===0?'just now':(i*3)+'m ago')+'</b></li>';
-  }).join('');
-
-  // price/market cap: small random drift every few seconds, feels alive
-  var price = 0.0000452, baseline = price;
-  function tickPrice(){
-    var drift = (Math.random()-0.42) * 0.06; // slight upward bias
-    price = Math.max(0.0000051, price * (1+drift));
-    var mcap = price * CONFIG.INITIAL_SUPPLY;
-    var dir = drift>0.004 ? 'up' : drift<-0.004 ? 'down' : 'flat';
-    $('priceTicker').setAttribute('data-dir', dir);
-    $('priceUsd').textContent = fmtCompactUsd(mcap);
-    if (dir!=='flat'){
-      var el=$('priceUsd'); el.classList.remove('flash-up','flash-down'); void el.offsetWidth;
-      el.classList.add(dir==='up'?'flash-up':'flash-down');
-    }
-    var chg = ((price/baseline)-1)*100;
-    $('priceChg').textContent = (chg>=0?'▲ ':'▼ ')+Math.abs(chg).toFixed(2)+'% (24h)';
-    $('pPrice').textContent = fmtUsd(price);
-    $('pPriceSub').textContent = 'demo data · simulated';
-    $('pChg').textContent = (chg>=0?'+':'')+chg.toFixed(2)+'%';
-    $('pChg').className = 'v '+(chg>=0?'up':'down');
-    $('pVol').textContent = fmtCompactUsd(210000 + Math.random()*90000);
-    $('pLiq').textContent = fmtCompactUsd(68000 + Math.random()*4000);
-    $('pMcap').textContent = 'market cap: '+fmtCompactUsd(mcap);
-  }
-  tickPrice();
-  setInterval(tickPrice, 4000);
-
-  // core: fills over ~45s, fissions, resets — a visible loop of the whole mechanic
-  var pct = 8;
-  $('targetInline').textContent = '10,000,000 $T92';
-  renderLevel(pct);
-  setInterval(function(){
-    pct += 2.3;
-    if (pct >= 100){
-      renderLevel(100);
-      playFission();
-      $('treasuryInline').textContent = '10,000,000 $T92';
-      setTimeout(function(){ pct = 0; renderLevel(0); $('treasuryInline').textContent = '0 $T92'; }, 2000);
-      return;
-    }
-    renderLevel(pct);
-    $('treasuryInline').textContent = nf.format(Math.round(pct/100*10000000))+' $T92';
-  }, 1200);
-
-  $('lastUpdate').textContent = 'Simulated · refreshes every few seconds';
-  $('refreshBtn').disabled = true;
-  $('autoBtn').style.display = 'none';
-}
-
 /* ---------- Startup ---------- */
-if (demoMode){
-  startDemo();
+renderWallets();
+renderLore();
+if (CONFIG.MINT_ADDRESS){
+  var mint = encodeURIComponent(CONFIG.MINT_ADDRESS);
+  $('caText').textContent = CONFIG.MINT_ADDRESS;
+  $('caCopy').disabled = false;
+  $('caNote').innerHTML = 'Official contract. Double-check it matches the one on <span class="handle">@T0KEN92</span>.';
+  $('lnkDex').href = 'https://dexscreener.com/solana/'+mint;
+  $('lnkScan').href = 'https://solscan.io/token/'+mint;
+  $('lnkPump').href = 'https://pump.fun/coin/'+mint;
+  $('caLinks').hidden = false;
 } else {
-  renderWallets();
-  renderLore();
-  if (CONFIG.MINT_ADDRESS){
-    var mint = encodeURIComponent(CONFIG.MINT_ADDRESS);
-    $('caText').textContent = CONFIG.MINT_ADDRESS;
-    $('caCopy').disabled = false;
-    $('caNote').innerHTML = 'Official contract. Double-check it matches the one on <span class="handle">@T0KEN92</span>.';
-    $('lnkDex').href = 'https://dexscreener.com/solana/'+mint;
-    $('lnkScan').href = 'https://solscan.io/token/'+mint;
-    $('lnkPump').href = 'https://pump.fun/coin/'+mint;
-    $('caLinks').hidden = false;
-  } else {
-    console.info('[T92] Pre-launch mode: set CONFIG.MINT_ADDRESS to power up the reactor.');
-  }
-  refresh();
-  schedulePoll();
-  fetchPrice();
-  schedulePricePoll();
+  console.info('[T92] Pre-launch mode: set CONFIG.MINT_ADDRESS to power up the reactor.');
 }
+refresh();
+schedulePoll();
+fetchPrice();
+schedulePricePoll();
 })();
