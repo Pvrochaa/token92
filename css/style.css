@@ -317,13 +317,17 @@ section{position:relative;padding:clamp(64px,9vw,120px) 0}
 .term-bar i{width:9px;height:9px;border-radius:50%;background:var(--dim)}
 .term-bar i:first-child{background:var(--danger)}.term-bar i:nth-child(2){background:var(--hazard)}.term-bar i:nth-child(3){background:var(--rad)}
 .term-bar span{margin-left:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.chapter{padding:clamp(22px,3.5vw,40px);min-height:300px}
+.chapter{padding:clamp(22px,3.5vw,40px);min-height:300px;display:flow-root}
 .chapter h3{font-family:var(--display);font-weight:900;text-transform:uppercase;font-size:clamp(32px,3.6vw,46px);line-height:.95;margin:0 0 20px}
 .chapter p{margin:0 0 14px;max-width:62ch;font-size:18px;line-height:1.7}
 .chapter .sig{font-family:var(--mono);color:var(--rad);font-size:13px;margin-top:24px}
 .chapter .sig::before{content:"> "}
 .chapter .sig::after{content:"";display:inline-block;width:8px;height:15px;background:var(--rad);margin-left:6px;vertical-align:-2px;animation:blink 1s steps(2) infinite}
 .chapter[hidden]{display:none}
+.operator-portrait{float:right;width:132px;margin:0 0 16px 22px;text-align:center}
+.operator-portrait img{display:block;width:100%;aspect-ratio:1;object-fit:cover;border-radius:4px;border:1px solid rgba(168,255,46,.4);box-shadow:0 0 24px rgba(168,255,46,.35),0 0 64px rgba(168,255,46,.15)}
+.operator-portrait figcaption{margin-top:9px;font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--rad)}
+@media (max-width:520px){.operator-portrait{float:none;width:118px;margin:0 auto 18px}}
 
 /* Buy */
 .buy{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(24px,4vw,56px);align-items:start}

@@ -29,18 +29,24 @@ const CONFIG = {
   // last Fission keeps adding up; once it hits this target, the core reaches 100%
   // and waits for the real Fission (burn) to happen.
   //
+  // Set to 1% of INITIAL_SUPPLY: frequent enough to feel alive early on, without
+  // emptying the supply too fast. Watch the real pace after launch and adjust —
+  // raise it if Fissions fire too often, lower it if the core fills too slowly.
+  //
   // Want the core to fill SLOWER? Raise this number.
   // Want it FASTER? Lower it.
-  FISSION_VOLUME_TARGET: 200000000,
+  FISSION_VOLUME_TARGET: 10000000,
 
   // Guard against a "single whale": no single buy can count for more than this
   // toward the core, even if the real buy is bigger — stops one big buy from
-  // filling the bar on its own. Suggestion: about 5-10% of the target above.
-  MAX_BUY_IMPACT: 15000000,
+  // filling the bar on its own. Set to 10% of the target above.
+  MAX_BUY_IMPACT: 1000000,
 
   // How much the treasury needs to accumulate until the next Fission (real burn,
   // shown in the panel). This is NOT what fills the core — that's the item above.
-  BURN_TARGET: 50000000,
+  // Kept equal to FISSION_VOLUME_TARGET so the two line up: the core hits 100%
+  // right as the treasury has enough to actually burn.
+  BURN_TARGET: 10000000,
 
   // How many real burns need to happen to unlock Chapter 4 of the story.
   LORE_UNLOCK_AT: 25,
