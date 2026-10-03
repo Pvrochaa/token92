@@ -6,8 +6,25 @@
 <title>TOKEN 92 · Reactor 92</title>
 <meta name="description" content="TOKEN 92 ($T92): the Solana memecoin built around a reactor. At 92%, Fission happens.">
 <meta name="theme-color" content="#040604">
-<link rel="icon" type="image/jpeg" href="favicon.jpg">
-<link rel="apple-touch-icon" href="favicon.jpg">
+<link rel="canonical" href="https://token92.vercel.app/">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="64x64" href="assets/favicon-64.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="TOKEN 92">
+<meta property="og:url" content="https://token92.vercel.app/">
+<meta property="og:title" content="TOKEN 92 · Reactor 92">
+<meta property="og:description" content="The reactor powered by the community. 92 fuel rods, Fission at 92%, public on-chain burn. $T92 on Solana.">
+<meta property="og:image" content="https://token92.vercel.app/assets/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="TOKEN 92 coin with a glowing radioactive symbol">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@T0KEN92">
+<meta name="twitter:title" content="TOKEN 92 · Reactor 92">
+<meta name="twitter:description" content="The reactor powered by the community. 92 fuel rods, Fission at 92%, public on-chain burn. $T92 on Solana.">
+<meta name="twitter:image" content="https://token92.vercel.app/assets/og.jpg">
+<link rel="preload" as="image" href="assets/coin-512.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Big+Shoulders+Stencil+Display:wght@800;900&family=Barlow:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
@@ -72,6 +89,14 @@ button{font:inherit;color:inherit;cursor:pointer}
 .status[data-s="loading"] i{background:var(--hazard);box-shadow:0 0 10px var(--hazard);animation:pulse 1s infinite}
 .status[data-s="error"]{border-color:rgba(255,90,71,.55);color:var(--danger)}
 .status[data-s="error"] i{background:var(--danger);box-shadow:0 0 10px var(--danger)}
+.status[data-s="prelaunch"]{border-color:rgba(255,210,31,.4);color:var(--hazard)}
+.status[data-s="prelaunch"] i{background:var(--hazard);box-shadow:0 0 10px var(--hazard);animation:blink 1.2s steps(2) infinite}
+.social{display:grid;place-items:center;width:38px;height:38px;flex-shrink:0;border:1px solid var(--line);border-radius:2px;color:var(--muted);transition:color .2s,border-color .2s,box-shadow .2s}
+.social:hover{color:var(--rad);border-color:var(--rad);box-shadow:0 0 16px rgba(168,255,46,.25)}
+.social svg{width:15px;height:15px;fill:currentColor}
+/* handles use the mono font so the zero in @T0KEN92 is unmistakable */
+.handle{font-family:var(--mono);font-size:.9em;font-weight:700;color:var(--rad)}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 @keyframes pulse{0%{box-shadow:0 0 0 0 var(--hazard)}100%{box-shadow:0 0 0 9px transparent}}
 @keyframes blink{50%{opacity:.35}}
 .menu-btn{display:none;background:none;border:1px solid var(--line);border-radius:2px;width:42px;height:40px;align-items:center;justify-content:center}
@@ -94,6 +119,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .btn-ghost{background:rgba(168,255,46,.06);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line)}
 .btn-ghost:hover{color:var(--rad);box-shadow:inset 0 0 0 1.5px var(--rad)}
 .btn-sm{--cut:7px;padding:9px 14px;font-size:12px}
+.btn:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
 .btn .arr{transition:transform .2s}
 .btn:hover .arr{transform:translateX(3px)}
 
@@ -110,11 +136,28 @@ button{font:inherit;color:inherit;cursor:pointer}
 @keyframes spin{to{transform:rotate(360deg)}}
 .hero .wrap{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.02fr);gap:clamp(28px,5vw,72px);align-items:center}
 .hero-tags{display:flex;align-items:center;gap:16px;margin-bottom:26px}
-.element{position:relative;width:88px;height:98px;flex-shrink:0;border:1.5px solid var(--rad);background:linear-gradient(160deg,rgba(168,255,46,.18),rgba(168,255,46,.03));box-shadow:0 0 30px rgba(168,255,46,.25),inset 0 0 22px rgba(168,255,46,.12);padding:7px 9px;display:flex;flex-direction:column;justify-content:space-between;border-radius:3px}
-.element .z{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--rad)}
-.element b{font-family:var(--stencil);font-size:46px;line-height:.8;color:var(--rad-hi);text-shadow:0 0 18px var(--rad-glow)}
-.element .nm{font-size:11.5px;font-weight:600;line-height:1}
-.element .ms{font-family:var(--mono);font-size:10px;color:var(--muted)}
+/* Interactive coin: front = the logo, back = an engraved message */
+.coin{--s:148px;position:relative;width:var(--s);height:var(--s);flex-shrink:0;padding:0;border:0;background:none;border-radius:50%;perspective:900px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.coin::before{content:"";position:absolute;inset:-18%;border-radius:50%;background:radial-gradient(closest-side,rgba(168,255,46,.32),transparent 72%);filter:blur(8px);pointer-events:none;animation:breathe 4s ease-in-out infinite}
+.coin:focus-visible{outline-offset:6px;border-radius:50%}
+.coin-tilt,.coin-inner{position:absolute;inset:0;transform-style:preserve-3d}
+.coin-tilt{transition:transform .3s ease-out;transform:rotateX(var(--tx,0deg)) rotateY(var(--ty,0deg))}
+.coin-inner{transition:transform 1.5s cubic-bezier(.16,.84,.2,1);transform:rotateY(var(--ry,0deg))}
+.coin.spinning .coin-inner{will-change:transform}
+.coin-face{position:absolute;inset:0;border-radius:50%;overflow:hidden;-webkit-backface-visibility:hidden;backface-visibility:hidden;background:#0A0B0A}
+.coin-face::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;box-shadow:inset 0 0 0 3px #A7AEA5,inset 0 0 0 5px #1B1F1B,inset 0 0 22px rgba(0,0,0,.75)}
+.coin-front img{display:block;width:100%;height:100%;object-fit:cover;transform:scale(1.06)}
+.coin-back{transform:rotateY(180deg);display:grid;place-items:center;
+  background:
+    radial-gradient(circle closest-side,#15230F 0%,#0A0F09 70%,#3A403A 70.5%,#3A403A 72.5%,transparent 73%),
+    radial-gradient(circle closest-side,transparent 88.5%,#1B1F1B 89%),
+    repeating-conic-gradient(from 6deg,var(--hazard) 0deg 6deg,#0A0B0A 6deg 12deg)}
+.coin-engrave{display:flex;flex-direction:column;align-items:center;gap:5px;max-width:64%;text-align:center}
+.coin-engrave svg{width:15px;height:15px;color:var(--rad);opacity:.7}
+.coin-msg{font-family:var(--mono);font-weight:700;font-size:max(9px,calc(var(--s) * .07));line-height:1.35;letter-spacing:.1em;text-transform:uppercase;color:var(--rad-hi);text-shadow:0 0 8px var(--rad-glow),0 0 2px var(--rad);transition:opacity .25s}
+.coin-msg.swap{opacity:0}
+.coin-msg small{display:block;margin-top:4px;font-size:.78em;letter-spacing:.14em;color:var(--hazard);text-shadow:0 0 8px rgba(255,210,31,.5)}
+.coin[data-rare="1"] .coin-back{box-shadow:0 0 34px rgba(255,210,31,.45)}
 .emblem{display:flex;flex-direction:column;gap:4px;font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 .emblem strong{display:flex;align-items:center;gap:8px;color:var(--hazard);font-weight:700}
 .emblem strong svg{width:18px;height:18px}
@@ -326,6 +369,10 @@ section{position:relative;padding:clamp(64px,9vw,120px) 0}
 .ca .facts span{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .ca .facts b{font-family:var(--display);font-weight:800;font-size:26px}
 .ca > .btn{margin-top:24px;width:100%}
+.ca-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.ca-links[hidden]{display:none}
+.ca-links a{flex:1 1 auto;text-align:center;text-decoration:none;font-family:var(--mono);font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:9px 12px;border:1px solid var(--line);border-radius:2px;color:var(--muted);transition:color .2s,border-color .2s}
+.ca-links a:hover{color:var(--rad);border-color:var(--rad)}
 
 /* FAQ */
 .faq{max-width:860px;display:grid;gap:10px}
@@ -375,7 +422,8 @@ footer nav a:hover{color:var(--rad)}
   .nav{position:fixed;top:calc(66px + env(safe-area-inset-top,0px));left:0;right:0;flex-direction:column;gap:0;background:rgba(4,6,4,.97);border-bottom:1px solid var(--line);padding:8px 18px 16px;display:none}
   .nav.open{display:flex}
   .nav a{padding:15px 4px;font-size:14px;border-bottom:1px solid var(--line-2)}
-  .menu-btn{display:inline-flex;margin-left:auto}
+  .menu-btn{display:inline-flex}
+  .top .social{margin-left:auto}
   .top .btn{display:none}
   .status{font-size:10.5px;padding:6px 9px}
   .hist-row{grid-template-columns:70px minmax(0,1fr);gap:4px 14px;padding:14px 18px}
@@ -397,8 +445,8 @@ footer nav a:hover{color:var(--rad)}
   .toggle{margin-left:0}
   .core-head{flex-direction:column}
   .price-ticker{align-items:flex-start}
-  .element{width:76px;height:86px}
-  .element b{font-size:38px}
+  .coin{--s:124px}
+  .hero-tags{gap:14px}
   .ca .facts b{font-size:21px}
 }
 @media (prefers-reduced-motion:reduce){
@@ -428,6 +476,7 @@ footer nav a:hover{color:var(--rad)}
       <a href="#historia">History</a>
       <a href="#comprar">Buy</a>
     </nav>
+    <a class="social" href="https://x.com/T0KEN92" target="_blank" rel="noopener" aria-label="TOKEN 92 on X (@T0KEN92)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
     <div class="status" id="status" data-s="stable" role="status" aria-live="polite"><i></i><span>Core stable</span></div>
     <a href="#comprar" class="btn btn-main btn-sm">Buy $T92</a>
     <button class="menu-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="nav"><span></span></button>
@@ -447,10 +496,24 @@ footer nav a:hover{color:var(--rad)}
   <svg class="mark-bg" aria-hidden="true"><use href="#trefoil"/></svg>
   <div class="wrap">
     <div class="hero-copy">
-      <div class="setup" id="setupBox" hidden>Fill in the <code>CONFIG</code> at the top of this file's <code>&lt;script&gt;</code>: at minimum the <b>MINT_ADDRESS</b>, once $T92 exists on pump.fun.</div>
+      <div class="setup" id="setupBox" hidden><b>Pre-launch.</b> The reactor goes live with the token. The official contract will be published here and on <a class="handle" href="https://x.com/T0KEN92" target="_blank" rel="noopener">@T0KEN92</a>, nowhere else.</div>
       <div class="err" id="errBox" hidden></div>
       <div class="hero-tags">
-        <div class="element" aria-hidden="true"><span class="z">92</span><b>U</b><span class="nm">Uranium</span><span class="ms">238.03</span></div>
+        <!-- some doors only open when you spin them -->
+        <button class="coin" id="coin" type="button" aria-label="TOKEN 92 coin. Flip it." aria-describedby="coinLive">
+          <span class="coin-tilt" id="coinTilt">
+            <span class="coin-inner" id="coinInner">
+              <span class="coin-face coin-front"><img src="assets/coin-512.jpg" alt="" width="512" height="512" decoding="async"></span>
+              <span class="coin-face coin-back" aria-hidden="true">
+                <span class="coin-engrave">
+                  <svg aria-hidden="true"><use href="#trefoil"/></svg>
+                  <span class="coin-msg" id="coinMsg"></span>
+                </span>
+              </span>
+            </span>
+          </span>
+        </button>
+        <span class="sr-only" id="coinLive" aria-live="polite"></span>
         <div class="emblem"><strong><svg aria-hidden="true"><use href="#trefoil"/></svg>Controlled area</strong>Reactor 92 · Solana network</div>
       </div>
       <h1>The reactor powered by the community <span class="num" data-text="$T92">$T92</span></h1>
@@ -544,7 +607,7 @@ footer nav a:hover{color:var(--rad)}
       </div>
       <div class="box hud">
         <h3>Public wallets</h3>
-        <p class="sub">Filled in from the CONFIG at the top of the file.</p>
+        <p class="sub">Treasury, dev and liquidity wallets, published so anyone can audit them.</p>
         <ul class="wallets" id="walletsList"></ul>
       </div>
     </div>
@@ -657,8 +720,13 @@ footer nav a:hover{color:var(--rad)}
       <div class="ca rv">
         <svg class="ca-mark" aria-hidden="true"><use href="#trefoil"/></svg>
         <h3>Official contract</h3>
-        <p>Demo address. The real contract will be published at launch.</p>
-        <div class="ca-field"><code id="caText">set MINT_ADDRESS in CONFIG</code><button class="btn btn-main btn-sm" data-copy-el="caText">Copy</button></div>
+        <p id="caNote">Published at launch. Only trust the address shown here and on <span class="handle">@T0KEN92</span>.</p>
+        <div class="ca-field"><code id="caText">Awaiting launch…</code><button class="btn btn-main btn-sm" id="caCopy" data-copy-el="caText" disabled>Copy</button></div>
+        <div class="ca-links" id="caLinks" hidden>
+          <a id="lnkDex" target="_blank" rel="noopener">Dexscreener</a>
+          <a id="lnkScan" target="_blank" rel="noopener">Solscan</a>
+          <a id="lnkPump" target="_blank" rel="noopener">pump.fun</a>
+        </div>
         <div class="facts">
           <div><span>Network</span><b>Solana</b></div>
           <div><span>Supply</span><b>1B</b></div>
@@ -695,6 +763,7 @@ footer nav a:hover{color:var(--rad)}
       <a href="#painel">Panel</a>
       <a href="#fissoes">Fissions</a>
       <a href="#comprar">Buy</a>
+      <a href="https://x.com/T0KEN92" target="_blank" rel="noopener">X · @T0KEN92</a>
     </nav>
   </div>
 </footer>
@@ -779,6 +848,8 @@ function relTime(tsSeconds){
 }
 
 var state = { rid:0, showAll:false, burns:[], lastBurnCount:-1 };
+// Confirmed transactions never change, so each one is fetched and parsed only once.
+var txCache = {};
 
 /* ---------- Core visual (92 rods) ---------- */
 var rodsG = $('rods'), rodEls = [];
@@ -790,8 +861,9 @@ var rodsG = $('rods'), rodEls = [];
   var rods=pts.slice(0,92), cx=0, cy=0;
   rods.forEach(function(p){cx+=p.x;cy+=p.y;}); cx/=92; cy/=92;
   var svgNS='http://www.w3.org/2000/svg';
-  rods.forEach(function(p){
+  rods.forEach(function(p,i){
     var g=document.createElementNS(svgNS,'g'); g.setAttribute('class','rod');
+    var t=document.createElementNS(svgNS,'title'); t.textContent='Fuel rod '+String(i+1).padStart(2,'0'); g.appendChild(t);
     g.setAttribute('transform','translate('+(p.x-cx).toFixed(2)+' '+(p.y-cy).toFixed(2)+')');
     var halo=document.createElementNS(svgNS,'circle'); halo.setAttribute('class','halo'); halo.setAttribute('r','13.5');
     var h=document.createElementNS(svgNS,'circle'); h.setAttribute('class','housing'); h.setAttribute('r','10.5');
@@ -926,7 +998,7 @@ function renderWallets(){
     ['Liquidity', CONFIG.LIQUIDITY_ADDRESS]
   ].filter(function(r){ return r[1]; });
   if (!rows.length){
-    $('walletsList').innerHTML = '<li class="empty" style="padding:8px 0;color:var(--muted)">Fill in the addresses in CONFIG to show them here.</li>';
+    $('walletsList').innerHTML = '<li class="empty" style="padding:8px 0;color:var(--muted)">Addresses will be published at launch.</li>';
     return;
   }
   $('walletsList').innerHTML = rows.map(function(r){
@@ -939,7 +1011,11 @@ function renderChart(){
   var svg=$('chart'), W=640, H=200, pad=28;
   var data = state.burns.slice(0,14).slice().reverse();
   svg.setAttribute('viewBox','0 0 '+W+' '+H);
-  if (!data.length){ svg.innerHTML=''; return; }
+  if (!data.length){
+    svg.innerHTML = '<line x1="'+pad+'" y1="'+(H-pad)+'" x2="'+(W-pad)+'" y2="'+(H-pad)+'" stroke="currentColor" stroke-opacity=".2"/>'+
+      '<text x="'+(W/2)+'" y="'+(H/2)+'" text-anchor="middle">'+(CONFIG.MINT_ADDRESS ? 'No burns yet' : 'First Fission happens after launch')+'</text>';
+    return;
+  }
   var max = Math.max.apply(null,data.map(function(d){return d.amount;}))*1.12;
   var bw=(W-pad*2)/data.length, out='';
   out += '<line x1="'+pad+'" y1="'+(H-pad)+'" x2="'+(W-pad)+'" y2="'+(H-pad)+'" stroke="currentColor" stroke-opacity=".2"/>';
@@ -956,7 +1032,10 @@ function renderChart(){
 function renderHistory(){
   var list = state.showAll ? state.burns : state.burns.slice(0,5);
   if (!list.length){
-    $('histBody').innerHTML = '<div class="hist-row"><span class="c">—</span><span>No burns found yet in the mint\'s last '+CONFIG.LOOKBACK+' transactions.</span><span></span><span></span></div>';
+    var emptyMsg = CONFIG.MINT_ADDRESS
+      ? 'No burns found yet in the mint\'s last '+CONFIG.LOOKBACK+' transactions.'
+      : 'No Fissions yet. The first one will be logged here, hash included.';
+    $('histBody').innerHTML = '<div class="hist-row"><span class="c">—</span><span>'+emptyMsg+'</span><span></span><span></span></div>';
   } else {
     $('histBody').innerHTML = list.map(function(f,i){
       return '<div class="hist-row"><span class="c">#'+(list.length-i)+'</span>'+
@@ -966,6 +1045,7 @@ function renderHistory(){
     }).join('');
   }
   $('moreBtn').textContent = state.showAll ? 'Show less' : 'Show all ('+state.burns.length+')';
+  $('moreBtn').parentNode.style.display = state.burns.length > 5 ? '' : 'none';
 }
 
 /* ---------- Real unlock for Chapter 4 (lore) ---------- */
@@ -1069,7 +1149,7 @@ function fetchPrice(){
 }
 function schedulePricePoll(){
   clearInterval(priceState.timer);
-  if (autoOn && CONFIG.PRICE_POLL_MS>0) priceState.timer = setInterval(fetchPrice, CONFIG.PRICE_POLL_MS);
+  if (autoOn && CONFIG.PRICE_POLL_MS>0) priceState.timer = setInterval(function(){ if (!document.hidden) fetchPrice(); }, CONFIG.PRICE_POLL_MS);
 }
 
 /* ---------- Main orchestration ---------- */
@@ -1078,9 +1158,11 @@ function refresh(){
 
   if (!CONFIG.MINT_ADDRESS){
     $('setupBox').hidden=false;
-    setStatus('error','Pending configuration');
-    $('heroNote').textContent='Fill in MINT_ADDRESS in the file\'s CONFIG to power up the reactor.';
-    renderWallets();
+    setStatus('prelaunch','Pre-launch');
+    $('heroNote').textContent='Reactor offline. Ignition at launch.';
+    $('priceChg').textContent='pre-launch';
+    $('feed').innerHTML='<li class="empty">Awaiting ignition…</li>';
+    renderWallets(); renderHistory(); renderChart();
     return;
   }
   $('setupBox').hidden=true;
@@ -1115,9 +1197,17 @@ function refresh(){
       var chain = Promise.resolve({burns:[], buys:[]});
       toCheck.forEach(function(s){
         chain = chain.then(function(acc){
+          var hit = txCache[s.signature];
+          if (hit){
+            acc.burns = acc.burns.concat(hit.burns);
+            acc.buys = acc.buys.concat(hit.buys);
+            return acc;
+          }
           return getParsedTx(s.signature).then(function(tx){
-            acc.burns = acc.burns.concat(extractBurns(tx,s.signature));
-            acc.buys = acc.buys.concat(extractBuys(tx,s.signature));
+            var parsed = { burns:extractBurns(tx,s.signature), buys:extractBuys(tx,s.signature) };
+            if (tx) txCache[s.signature] = parsed;
+            acc.burns = acc.burns.concat(parsed.burns);
+            acc.buys = acc.buys.concat(parsed.buys);
             return acc;
           }).catch(function(){ return acc; });
         });
@@ -1185,8 +1275,12 @@ $('refreshBtn').addEventListener('click', refresh);
 var autoOn=true, pollTimer=null;
 function schedulePoll(){
   clearInterval(pollTimer);
-  if (autoOn && CONFIG.POLL_MS>0) pollTimer=setInterval(refresh, CONFIG.POLL_MS);
+  if (autoOn && CONFIG.POLL_MS>0) pollTimer=setInterval(function(){ if (!document.hidden) refresh(); }, CONFIG.POLL_MS);
 }
+// Polling is skipped while the tab is hidden; catch up as soon as it's visible again.
+document.addEventListener('visibilitychange', function(){
+  if (!document.hidden && autoOn && CONFIG.MINT_ADDRESS){ refresh(); fetchPrice(); }
+});
 $('autoBtn').addEventListener('click',function(){
   autoOn=!autoOn; this.setAttribute('aria-pressed',String(autoOn)); schedulePoll(); schedulePricePoll();
 });
@@ -1268,11 +1362,106 @@ if ('IntersectionObserver' in window && !reduce){
   document.querySelectorAll('.rv').forEach(function(el){ io.observe(el); });
 }
 
+/* ---------- The coin ---------- */
+// Front: the logo. Back: an engraved line. Every 9th flip lands on a rarer one.
+(function(){
+  var coin=$('coin'); if (!coin) return;
+  var tilt=$('coinTilt'), msg=$('coinMsg'), live=$('coinLive');
+  var LINES = {
+    common: 'The core<br>remembers<br>who came<br>first',
+    rare:   'You found<br>the signal.<br>Tell no one.<small>Operator 0</small>'
+  };
+  var PLAIN = {
+    common: 'The core remembers who came first.',
+    rare:   'You found the signal. Tell no one. Operator 0.'
+  };
+  var KEY='t92.coin', angle=0, back=false, flips=0, audio=null, landT=null;
+  try{ flips = parseInt(localStorage.getItem(KEY),10) || 0; }catch(e){}
+  msg.innerHTML = LINES.common;
+
+  // short metallic "ting" when the coin lands
+  function ting(){
+    try{
+      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+      var t = audio.currentTime;
+      [1318.5, 1975.5].forEach(function(freq, i){
+        var o=audio.createOscillator(), g=audio.createGain();
+        o.type='sine'; o.frequency.value=freq;
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(i ? 0.018 : 0.035, t+0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, t+(i ? 0.5 : 0.9));
+        o.connect(g); g.connect(audio.destination); o.start(t); o.stop(t+1);
+      });
+    }catch(e){}
+  }
+
+  function signal(){
+    var el=$('status'), prevS=el.getAttribute('data-s'), prevL=el.querySelector('span').textContent;
+    setStatus('fission','Signal decoded');
+    toast('Signal decoded. Operator 0 is watching.');
+    setTimeout(function(){ if (el.getAttribute('data-s')==='fission') setStatus(prevS, prevL); }, 3200);
+  }
+
+  function flip(){
+    flips++;
+    try{ localStorage.setItem(KEY, String(flips)); }catch(e){}
+    var rare = flips % 9 === 0;
+    // a rare flip always lands on the back; any other flip turns the coin over
+    var toBack = rare ? true : !back;
+    angle += 720 + (toBack !== back ? 180 : 0);
+    back = toBack;
+    coin.classList.add('spinning');
+    coin.style.setProperty('--ry', angle+'deg');
+    // swap the engraving mid-spin
+    msg.classList.add('swap');
+    setTimeout(function(){
+      msg.innerHTML = rare ? LINES.rare : LINES.common;
+      coin.setAttribute('data-rare', rare ? '1' : '0');
+      msg.classList.remove('swap');
+    }, reduce ? 0 : 420);
+    clearTimeout(landT);
+    landT = setTimeout(function(){
+      coin.classList.remove('spinning');
+      ting();
+      live.textContent = back ? 'Back of the coin: '+(rare ? PLAIN.rare : PLAIN.common) : 'Front of the coin.';
+      if (rare) signal();
+    }, reduce ? 0 : 1250);
+  }
+  coin.addEventListener('click', flip);
+
+  // gentle 3D tilt that follows the mouse
+  if (!reduce && window.matchMedia && matchMedia('(hover:hover) and (pointer:fine)').matches){
+    coin.addEventListener('pointermove', function(e){
+      var r=coin.getBoundingClientRect(), x=(e.clientX-r.left)/r.width-.5, y=(e.clientY-r.top)/r.height-.5;
+      tilt.style.setProperty('--tx', (-y*22).toFixed(1)+'deg');
+      tilt.style.setProperty('--ty', (x*22).toFixed(1)+'deg');
+    });
+    coin.addEventListener('pointerleave', function(){
+      tilt.style.setProperty('--tx','0deg'); tilt.style.setProperty('--ty','0deg');
+    });
+  }
+})();
+
+// For the ones who open the console.
+try{
+  console.log('%c☢ REACTOR 92', 'color:#A8FF2E;font:900 22px/1.4 monospace');
+  console.log('%cYou looked under the hood. Most people never do.\nThe coin has two sides. The ninth time, it has three.', 'color:#8B9A86;font:12px/1.6 monospace');
+}catch(e){}
+
 /* ---------- Startup ---------- */
 renderWallets();
 renderLore();
 if (CONFIG.MINT_ADDRESS){
+  var mint = encodeURIComponent(CONFIG.MINT_ADDRESS);
   $('caText').textContent = CONFIG.MINT_ADDRESS;
+  $('caCopy').disabled = false;
+  $('caNote').innerHTML = 'Official contract. Double-check it matches the one on <span class="handle">@T0KEN92</span>.';
+  $('lnkDex').href = 'https://dexscreener.com/solana/'+mint;
+  $('lnkScan').href = 'https://solscan.io/token/'+mint;
+  $('lnkPump').href = 'https://pump.fun/coin/'+mint;
+  $('caLinks').hidden = false;
+} else {
+  console.info('[T92] Pre-launch mode: set CONFIG.MINT_ADDRESS to power up the reactor.');
 }
 refresh();
 schedulePoll();
