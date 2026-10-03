@@ -60,6 +60,11 @@ button{font:inherit;color:inherit;cursor:pointer}
 .status[data-s="error"] i{background:var(--danger);box-shadow:0 0 10px var(--danger)}
 .status[data-s="prelaunch"]{border-color:rgba(255,210,31,.4);color:var(--hazard)}
 .status[data-s="prelaunch"] i{background:var(--hazard);box-shadow:0 0 10px var(--hazard);animation:blink 1.2s steps(2) infinite}
+.status[data-s="demo"]{border-color:rgba(61,242,255,.5);color:var(--cyan)}
+.status[data-s="demo"] i{background:var(--cyan);box-shadow:0 0 10px var(--cyan);animation:blink 1.2s steps(2) infinite}
+.demo-banner{position:fixed;top:0;left:0;right:0;z-index:95;background:var(--cyan);color:#001318;font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;text-align:center;padding:7px 12px}
+body.is-demo{padding-top:34px}
+body.is-demo .top{top:34px}
 .social{display:grid;place-items:center;width:38px;height:38px;flex-shrink:0;border:1px solid var(--line);border-radius:2px;color:var(--muted);transition:color .2s,border-color .2s,box-shadow .2s}
 .social:hover{color:var(--rad);border-color:var(--rad);box-shadow:0 0 16px rgba(168,255,46,.25)}
 .social svg{width:15px;height:15px;fill:currentColor}
@@ -163,6 +168,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .core-id{font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);line-height:1.6}
 .core-id b{display:block;color:var(--rad);font-weight:700}
 .price-ticker{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.price-label{font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 .price-usd{font-family:var(--display);font-weight:800;font-size:clamp(26px,3.4vw,34px);line-height:1;color:#fff;font-variant-numeric:tabular-nums;transition:color .3s}
 .price-chg{font-family:var(--mono);font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:2px;background:rgba(170,200,160,.1);color:var(--muted);text-align:right}
 .price-ticker[data-dir="up"] .price-usd{color:var(--rad)}
