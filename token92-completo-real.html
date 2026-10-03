@@ -23,9 +23,7 @@
 <meta name="twitter:site" content="@T0KEN92">
 <meta name="twitter:title" content="TOKEN 92 · Reactor 92">
 <meta name="twitter:description" content="The reactor powered by the community. 92 fuel rods, Fission at 92%, public on-chain burn. $T92 on Solana.">
-<meta name="twitter:image" content="https://token92.vercel.app/assets/og.jpg">
-<link rel="preload" as="image" href="assets/coin-512.jpg">
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<meta name="twitter:image" content="https://token92.vercel.app/assets/og.jpg"><link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Big+Shoulders+Stencil+Display:wght@800;900&family=Barlow:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -144,14 +142,18 @@ button{font:inherit;color:inherit;cursor:pointer}
 .coin-tilt{transition:transform .3s ease-out;transform:rotateX(var(--tx,0deg)) rotateY(var(--ty,0deg))}
 .coin-inner{transition:transform 1.5s cubic-bezier(.16,.84,.2,1);transform:rotateY(var(--ry,0deg))}
 .coin.spinning .coin-inner{will-change:transform}
-.coin-face{position:absolute;inset:0;border-radius:50%;overflow:hidden;-webkit-backface-visibility:hidden;backface-visibility:hidden;background:#0A0B0A}
-.coin-face::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;box-shadow:inset 0 0 0 3px #A7AEA5,inset 0 0 0 5px #1B1F1B,inset 0 0 22px rgba(0,0,0,.75)}
-.coin-front img{display:block;width:100%;height:100%;object-fit:cover;transform:scale(1.06)}
-.coin-back{transform:rotateY(180deg);display:grid;place-items:center;
+/* both faces share the same plate: metal rim, hazard-stripe ring, dark inner disc */
+.coin-face{position:absolute;inset:0;border-radius:50%;overflow:hidden;-webkit-backface-visibility:hidden;backface-visibility:hidden;
   background:
-    radial-gradient(circle closest-side,#15230F 0%,#0A0F09 70%,#3A403A 70.5%,#3A403A 72.5%,transparent 73%),
+    radial-gradient(circle at 38% 30%,rgba(255,255,255,.07),transparent 45%),
+    radial-gradient(circle closest-side,#16240F 0%,#0A0F09 70%,#3A403A 70.5%,#3A403A 72.5%,transparent 73%),
     radial-gradient(circle closest-side,transparent 88.5%,#1B1F1B 89%),
     repeating-conic-gradient(from 6deg,var(--hazard) 0deg 6deg,#0A0B0A 6deg 12deg)}
+.coin-face::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;box-shadow:inset 0 0 0 3px #A7AEA5,inset 0 0 0 5px #1B1F1B,inset 0 0 22px rgba(0,0,0,.75)}
+.coin-sym{position:absolute;left:21%;top:13%;width:58%;height:58%;filter:drop-shadow(0 0 5px rgba(168,255,46,.75)) drop-shadow(0 0 14px rgba(168,255,46,.35))}
+.coin-num{position:absolute;left:0;right:0;bottom:19%;text-align:center;font-family:var(--stencil);font-weight:900;font-size:calc(var(--s) * .13);line-height:1;letter-spacing:.04em;
+  background:linear-gradient(180deg,#F2F4F0,#A7AEA5 55%,#5E655C);-webkit-background-clip:text;background-clip:text;color:transparent}
+.coin-back{transform:rotateY(180deg);display:grid;place-items:center}
 .coin-engrave{display:flex;flex-direction:column;align-items:center;gap:5px;max-width:64%;text-align:center}
 .coin-engrave svg{width:15px;height:15px;color:var(--rad);opacity:.7}
 .coin-msg{font-family:var(--mono);font-weight:700;font-size:max(9px,calc(var(--s) * .07));line-height:1.35;letter-spacing:.1em;text-transform:uppercase;color:var(--rad-hi);text-shadow:0 0 8px var(--rad-glow),0 0 2px var(--rad);transition:opacity .25s}
@@ -503,7 +505,20 @@ footer nav a:hover{color:var(--rad)}
         <button class="coin" id="coin" type="button" aria-label="TOKEN 92 coin. Flip it." aria-describedby="coinLive">
           <span class="coin-tilt" id="coinTilt">
             <span class="coin-inner" id="coinInner">
-              <span class="coin-face coin-front"><img src="assets/coin-512.jpg" alt="" width="512" height="512" decoding="async"></span>
+              <span class="coin-face coin-front" aria-hidden="true">
+                <svg class="coin-sym" viewBox="-11 -11 22 22">
+                  <defs>
+                    <radialGradient id="coinGlow" cx="50%" cy="45%" r="60%">
+                      <stop offset="0%" stop-color="#E8FFB8"/>
+                      <stop offset="45%" stop-color="#A8FF2E"/>
+                      <stop offset="100%" stop-color="#4FB812"/>
+                    </radialGradient>
+                  </defs>
+                  <circle r="1.7" fill="url(#coinGlow)"/>
+                  <path fill="url(#coinGlow)" stroke="#0A0F09" stroke-width=".25" d="M-1.350 -2.338L-4.600 -7.967A9.2 9.2 0 0 1 4.600 -7.967L1.350 -2.338A2.7 2.7 0 0 0 -1.350 -2.338ZM2.700 0.000L9.200 0.000A9.2 9.2 0 0 1 4.600 7.967L1.350 2.338A2.7 2.7 0 0 0 2.700 0.000ZM-1.350 2.338L-4.600 7.967A9.2 9.2 0 0 1 -9.200 0.000L-2.700 0.000A2.7 2.700 0 0 0 -1.350 2.338Z"/>
+                </svg>
+                <span class="coin-num">92</span>
+              </span>
               <span class="coin-face coin-back" aria-hidden="true">
                 <span class="coin-engrave">
                   <svg aria-hidden="true"><use href="#trefoil"/></svg>
