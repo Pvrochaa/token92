@@ -81,7 +81,18 @@ function relTime(tsSeconds){
   return Math.round(h/24)+'d ago';
 }
 
-var state = { rid:0, showAll:false, burns:[], lastBurnCount:-1 };
+var state = { rid:0, showAll:false, burns:[], lastBurnCount:-1, fissions:0, pct:0, lit:0, seen:{}, primed:false };
+function fmtCompactNum(n){
+  if (n>=1e9) return (n/1e9).toFixed(2)+'B';
+  if (n>=1e6) return (n/1e6).toFixed(n>=1e7?1:2)+'M';
+  if (n>=1e3) return (n/1e3).toFixed(n>=1e4?0:1)+'K';
+  return String(Math.round(n));
+}
+function fmtDur(secs){
+  if (secs < 3600) return Math.max(1, Math.round(secs/60))+'m';
+  if (secs < 172800) return Math.round(secs/3600)+'h';
+  return Math.round(secs/86400)+'d';
+}
 // Confirmed transactions never change, so each one is fetched and parsed only once.
 var txCache = {};
 
@@ -120,6 +131,14 @@ function renderLevel(pct){
   pct = Math.max(0, Math.min(100, pct));
   var lit = Math.floor(pct/100*92+1e-6);
   rodEls.forEach(function(el,i){ el.classList.toggle('lit', i<lit); });
+  // rods that just lit up flash white for a moment, so new fuel is visible
+  if (state.primed && lit > state.lit && !reduce){
+    var fresh = rodEls.slice(state.lit, lit);
+    fresh.forEach(function(el){ el.classList.add('new'); });
+    setTimeout(function(){ fresh.forEach(function(el){ el.classList.remove('new'); }); }, 1600);
+  }
+  state.lit = lit; state.pct = pct;
+  $('mbarPct').textContent = nf1.format(pct)+'%';
   $('glow').setAttribute('opacity',(0.12+Math.pow(pct/100,1.4)*0.88).toFixed(3));
   $('arc').setAttribute('stroke-dasharray',(ARC_LEN*pct/100).toFixed(1)+' '+ARC_LEN.toFixed(1));
   $('lvl').textContent = nf1.format(pct);
@@ -289,7 +308,8 @@ function renderHistory(){
     $('histBody').innerHTML = list.map(function(f,i){
       return '<div class="hist-row"><span class="c">#'+(list.length-i)+'</span>'+
         '<span class="burn">'+nf.format(f.amount)+' $T92</span>'+
-        '<span class="tx"><code title="'+f.signature+'">'+short(f.signature,6,6)+'</code><button data-copy="'+f.signature+'">Copy</button></span>'+
+        '<span class="tx"><code title="'+f.signature+'">'+short(f.signature,6,6)+'</code><button data-copy="'+f.signature+'">Copy</button>'+
+          '<button data-share-burn="'+(list.length-i)+'|'+Math.round(f.amount)+'|'+f.signature+'">Share</button></span>'+
         '<span class="t">'+relTime(f.time)+'</span></div>';
     }).join('');
   }
@@ -299,7 +319,7 @@ function renderHistory(){
 
 /* ---------- Real unlock for Chapter 4 (lore) ---------- */
 function renderLore(){
-  var n = state.burns.length, need = CONFIG.LORE_UNLOCK_AT;
+  var n = Math.max(state.fissions, state.burns.length), need = CONFIG.LORE_UNLOCK_AT;
   var tab = $('t4');
   if (n >= need){
     tab.classList.remove('locked');
@@ -318,6 +338,138 @@ function renderLore(){
   }
 }
 
+/* ---------- Milestones (Fissions completed, from total burned) ---------- */
+function renderMilestones(n){
+  var stops = [1, 5, 10, CONFIG.LORE_UNLOCK_AT], top = CONFIG.LORE_UNLOCK_AT;
+  var track = $('msTrack');
+  if (!track.querySelector('.ms-stop')){
+    track.insertAdjacentHTML('beforeend', stops.map(function(s){
+      var key = s===top;
+      return '<i class="ms-stop'+(key?' key':'')+'" data-at="'+s+'" style="left:'+(s/top*100)+'%"><span>'+(key ? s+' · Chapter 4' : (s===1?'1st':s))+'</span></i>';
+    }).join(''));
+  }
+  track.querySelectorAll('.ms-stop').forEach(function(el){ el.classList.toggle('done', n >= +el.getAttribute('data-at')); });
+  $('msFill').style.width = Math.min(100, n/top*100)+'%';
+  $('msCount').textContent = n;
+}
+
+/* ---------- Top fuelers of the current cycle ---------- */
+function renderBoard(cycleBuys){
+  var board = $('board');
+  if (!CONFIG.MINT_ADDRESS){
+    board.innerHTML = '<li class="empty">The leaderboard opens with the first buy after launch. The biggest fuelers of each cycle show up here.</li>';
+    return;
+  }
+  var byWallet = {};
+  cycleBuys.forEach(function(b){ byWallet[b.wallet] = (byWallet[b.wallet]||0) + Math.min(b.amount, CONFIG.MAX_BUY_IMPACT); });
+  var rows = Object.keys(byWallet).map(function(w){ return {w:w, fuel:byWallet[w]}; })
+    .sort(function(a,b){ return b.fuel - a.fuel; }).slice(0,5);
+  if (!rows.length){
+    board.innerHTML = '<li class="empty">No buys in this cycle yet. The next one takes the top spot.</li>';
+    return;
+  }
+  var max = rows[0].fuel;
+  board.innerHTML = rows.map(function(r,i){
+    return '<li><span class="rk">#'+(i+1)+'</span>'+
+      '<span class="w"><a href="https://solscan.io/account/'+r.w+'" target="_blank" rel="noopener">'+short(r.w,4,4)+'</a></span>'+
+      '<span class="amt">'+fmtCompactNum(r.fuel)+'</span>'+
+      '<span class="meter"><i style="width:'+(r.fuel/max*100).toFixed(1)+'%"></i></span></li>';
+  }).join('');
+}
+
+/* ---------- Next-Fission estimate, from the pace of real buys ---------- */
+function etaText(cycleBuys, volume){
+  var target = CONFIG.FISSION_VOLUME_TARGET;
+  if (volume >= target) return 'ready to burn';
+  var times = cycleBuys.map(function(b){ return b.time; }).filter(Boolean);
+  if (times.length < 2) return 'needs more buys';
+  var span = Date.now()/1000 - Math.min.apply(null, times);
+  if (span < 120) return 'calculating…';
+  var rate = volume / span;
+  if (!(rate > 0)) return '—';
+  return '~'+fmtDur((target - volume) / rate)+' at this pace';
+}
+
+/* ---------- Live buys feed ---------- */
+function renderBuyFeed(buys){
+  $('feed').innerHTML = buys.slice(0,6).map(function(b){
+    return '<li><span><a href="https://solscan.io/tx/'+b.signature+'" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">'+short(b.wallet,4,4)+' +'+fmtCompactNum(b.amount)+'</a></span><b>'+relTime(b.time)+'</b></li>';
+  }).join('');
+}
+
+/* ---------- Share on X ---------- */
+var SITE_URL = 'https://token92.vercel.app/';
+function openShare(text){
+  var u = 'https://x.com/intent/post?text='+encodeURIComponent(text)+'&url='+encodeURIComponent(SITE_URL);
+  window.open(u, '_blank', 'noopener');
+}
+function shareCore(){
+  if (!CONFIG.MINT_ADDRESS) return openShare('Reactor 92 is coming. 92 fuel rods, one Fission at 92%. Every buy is fuel. ☢ @T0KEN92');
+  openShare('Reactor 92 core at '+nf1.format(state.pct)+'%: '+state.lit+' of 92 rods lit. Every buy is fuel, every Fission burns supply for good. ☢ $T92 @T0KEN92');
+}
+
+/* ---------- Live chart (Dexscreener embed) ---------- */
+var chartMounted = false;
+function mountChart(pair){
+  if (chartMounted || !pair) return;
+  chartMounted = true;
+  var f = document.createElement('iframe');
+  f.title = '$T92 price chart';
+  f.loading = 'lazy';
+  f.src = 'https://dexscreener.com/solana/'+pair+'?embed=1&theme=dark&trades=0&info=0';
+  $('chartPh').remove();
+  $('chartFrame').classList.add('on');
+  $('chartFrame').appendChild(f);
+}
+
+/* ---------- Fuel calculator ---------- */
+var calcUnit = 't92';
+(function(){
+  var viz = $('calcRodsViz'), html = '';
+  for (var i=0;i<92;i++) html += '<i></i>';
+  viz.innerHTML = html;
+})();
+function updateCalc(){
+  var v = parseFloat(String($('calcIn').value).replace(/[^0-9.]/g,''));
+  var tokens = 0;
+  if (v > 0) tokens = calcUnit==='sol' ? (priceState.native ? v / priceState.native : 0) : v;
+  var cap = CONFIG.MAX_BUY_IMPACT, counted = Math.min(tokens, cap);
+  var pct = counted / CONFIG.FISSION_VOLUME_TARGET * 100;
+  var rods = pct / 100 * 92;
+  $('calcFuel').textContent = fmtCompactNum(counted);
+  $('calcPct').textContent = (pct > 0 && pct < 1 ? pct.toFixed(2) : nf1.format(pct))+'%';
+  $('calcRods').textContent = rods > 0 && rods < 1 ? '<1' : String(Math.floor(rods));
+  // preview on top of what's already lit right now
+  var from = state.lit, to = Math.min(92, from + Math.max(rods > 0 ? 1 : 0, Math.floor(rods)));
+  $('calcRodsViz').querySelectorAll('i').forEach(function(el,i){
+    el.classList.toggle('on', i >= from && i < to);
+    el.classList.toggle('had', i < from);
+  });
+  var note = $('calcNote');
+  if (tokens > cap){
+    note.textContent = 'Capped at '+nf.format(cap)+' $T92 per buy, so no single wallet fills the core alone. Split it across buys to add more.';
+    note.classList.add('warn');
+  } else {
+    note.textContent = calcUnit==='sol' && priceState.native
+      ? '≈ '+nf.format(Math.round(tokens))+' $T92 at the current price.'
+      : 'Each buy counts up to '+nf.format(cap)+' $T92, so no single wallet can fill the core alone.';
+    note.classList.remove('warn');
+  }
+}
+function setCalcUnit(u){
+  calcUnit = u;
+  $('unitT92').setAttribute('aria-pressed', String(u==='t92'));
+  $('unitSol').setAttribute('aria-pressed', String(u==='sol'));
+  updateCalc();
+}
+$('calcIn').addEventListener('input', updateCalc);
+$('unitT92').addEventListener('click', function(){ setCalcUnit('t92'); });
+$('unitSol').addEventListener('click', function(){ if (!this.disabled) setCalcUnit('sol'); });
+$('calcChips').addEventListener('click', function(e){
+  var b = e.target.closest('[data-amt]'); if (!b) return;
+  setCalcUnit('t92'); $('calcIn').value = nf.format(+b.getAttribute('data-amt')); updateCalc();
+});
+
 /* ---------- Recent activity feed ---------- */
 function renderFeed(sigs){
   var feed=$('feed');
@@ -327,7 +479,7 @@ function renderFeed(sigs){
 }
 
 /* ---------- Live price (Dexscreener, public API, no key needed) ---------- */
-var priceState = { last:null, timer:null };
+var priceState = { last:null, timer:null, native:0 };
 function fmtUsd(n){
   if (n==null || isNaN(n)) return '—';
   if (n >= 1) return '$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:4});
@@ -363,6 +515,15 @@ function fetchPrice(){
       pairs.sort(function(a,b){ return (b.liquidity&&b.liquidity.usd||0) - (a.liquidity&&a.liquidity.usd||0); });
       var p = pairs[0];
       var price = parseFloat(p.priceUsd);
+      // price in SOL powers the calculator's SOL mode; the pair address powers the chart
+      var native = parseFloat(p.priceNative);
+      if (native > 0){
+        var firstNative = !priceState.native;
+        priceState.native = native;
+        $('unitSol').disabled = false; $('unitSol').removeAttribute('title');
+        if (firstNative || calcUnit==='sol') updateCalc();
+      }
+      mountChart(p.pairAddress);
       var chg = p.priceChange && typeof p.priceChange.h24==='number' ? p.priceChange.h24 : null;
       var vol = p.volume && p.volume.h24;
       var liq = p.liquidity && p.liquidity.usd;
@@ -412,15 +573,16 @@ function refresh(){
     $('setupBox').hidden=false;
     setStatus('prelaunch','Pre-launch');
     // nothing to buy yet: point the main calls to action at X instead
-    [['heroCta','Follow @T0KEN92 <span class="arr">→</span>'],['topCta','Follow on X']].forEach(function(c){
+    [['heroCta','Follow @T0KEN92 <span class="arr">→</span>'],['topCta','Follow on X'],['mbarCta','Follow on X']].forEach(function(c){
       var a=$(c[0]); a.innerHTML=c[1]; a.href='https://x.com/T0KEN92'; a.target='_blank'; a.rel='noopener';
     });
     $('heroNote').textContent='Reactor offline. Ignition at launch.';
     $('priceChg').textContent='pre-launch';
     $('treasuryInline').textContent='0 $T92';
     $('targetInline').textContent=nf.format(CONFIG.FISSION_VOLUME_TARGET)+' $T92';
+    $('etaInline').textContent='after launch';
     $('feed').innerHTML='<li class="empty">Awaiting ignition…</li>';
-    renderWallets(); renderHistory(); renderChart();
+    renderWallets(); renderHistory(); renderChart(); renderBoard([]); renderMilestones(0);
     return;
   }
   $('setupBox').hidden=true;
@@ -474,8 +636,11 @@ function refresh(){
         if (myRid!==state.rid) return;
         var burns=acc.burns, buys=acc.buys;
         state.burns = burns;
-        $('gFis').textContent = burns.length;
-        renderHistory(); renderChart(); renderLore();
+        // Fissions completed: the lookback window only sees recent transactions, so
+        // count from total supply burned instead (each Fission burns BURN_TARGET)
+        state.fissions = Math.max(burns.length, CONFIG.BURN_TARGET>0 ? Math.floor(burned/CONFIG.BURN_TARGET) : 0);
+        $('gFis').textContent = state.fissions;
+        renderHistory(); renderChart(); renderLore(); renderMilestones(state.fissions);
         if (state.lastBurnCount>=0 && burns.length>state.lastBurnCount) playFission();
         state.lastBurnCount = burns.length;
 
@@ -484,13 +649,27 @@ function refresh(){
         var cycleStart = burns.length ? burns[0].time : 0;
         // buys from the project's own wallets never fuel the core: only the community does
         var own = [CONFIG.DEV_ADDRESS, CONFIG.TREASURY_ADDRESS].filter(Boolean);
-        var volume = buys
-          .filter(function(b){ return b.time > cycleStart && own.indexOf(b.wallet) < 0; })
-          .reduce(function(sum,b){ return sum + Math.min(b.amount, CONFIG.MAX_BUY_IMPACT); }, 0);
+        var community = buys.filter(function(b){ return own.indexOf(b.wallet) < 0; });
+        var cycleBuys = community.filter(function(b){ return b.time > cycleStart; });
+        var volume = cycleBuys.reduce(function(sum,b){ return sum + Math.min(b.amount, CONFIG.MAX_BUY_IMPACT); }, 0);
+
+        // announce buys that weren't there on the previous read
+        var fresh = community.filter(function(b){ return !state.seen[b.signature]; });
+        community.forEach(function(b){ state.seen[b.signature] = 1; });
+        if (state.primed && fresh.length){
+          var big = fresh.reduce(function(a,b){ return b.amount > a.amount ? b : a; });
+          toast('☢ +'+fmtCompactNum(big.amount)+' $T92 of fuel from '+short(big.wallet,4,4)+(fresh.length>1 ? ' (+'+(fresh.length-1)+' more)' : ''));
+        }
+
         var pct = CONFIG.FISSION_VOLUME_TARGET>0 ? (volume/CONFIG.FISSION_VOLUME_TARGET*100) : 0;
         renderLevel(pct);
+        state.primed = true;
         $('treasuryInline').textContent = nf.format(Math.round(volume))+' $T92';
         $('targetInline').textContent = nf.format(CONFIG.FISSION_VOLUME_TARGET)+' $T92';
+        $('etaInline').textContent = etaText(cycleBuys, volume);
+        renderBoard(cycleBuys);
+        if (community.length) renderBuyFeed(community);
+        updateCalc();
       });
 
       setStatus('stable','Live');
@@ -530,6 +709,24 @@ document.addEventListener('click',function(e){
 });
 
 $('moreBtn').addEventListener('click',function(){ state.showAll=!state.showAll; renderHistory(); });
+$('shareBtn').addEventListener('click', shareCore);
+document.addEventListener('click',function(e){
+  var b=e.target.closest('[data-share-burn]'); if(!b) return;
+  var p=b.getAttribute('data-share-burn').split('|');
+  openShare('Fission #'+p[0]+' on Reactor 92: '+nf.format(+p[1])+' $T92 burned forever. Receipt: solscan.io/tx/'+p[2]+' ☢ $T92 @T0KEN92');
+});
+
+// thin progress line under the header as you scroll the page
+(function(){
+  var bar=$('scrollProg'), ticking=false;
+  function upd(){
+    var h=document.documentElement, max=h.scrollHeight-h.clientHeight;
+    bar.style.width = (max>0 ? (h.scrollTop/max*100) : 0)+'%';
+    ticking=false;
+  }
+  window.addEventListener('scroll', function(){ if(!ticking){ ticking=true; requestAnimationFrame(upd); } }, {passive:true});
+  upd();
+})();
 $('refreshBtn').addEventListener('click', refresh);
 
 var autoOn=true, pollTimer=null;
@@ -711,6 +908,9 @@ try{
 /* ---------- Startup ---------- */
 renderWallets();
 renderLore();
+renderMilestones(0);
+renderBoard([]);
+updateCalc();
 if (CONFIG.MINT_ADDRESS){
   var mint = encodeURIComponent(CONFIG.MINT_ADDRESS);
   $('caText').textContent = CONFIG.MINT_ADDRESS;
@@ -719,6 +919,7 @@ if (CONFIG.MINT_ADDRESS){
   $('lnkDex').href = 'https://dexscreener.com/solana/'+mint;
   $('lnkScan').href = 'https://solscan.io/token/'+mint;
   $('lnkPump').href = 'https://pump.fun/coin/'+mint;
+  $('lnkJup').href = 'https://jup.ag/swap/SOL-'+mint;
   $('caLinks').hidden = false;
 } else {
   console.info('[T92] Pre-launch mode: set CONFIG.MINT_ADDRESS to power up the reactor.');

@@ -54,6 +54,7 @@
     <a href="#comprar" class="btn btn-main btn-sm" id="topCta">Buy $T92</a>
     <button class="menu-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="nav"><span></span></button>
   </div>
+  <div class="scroll-progress" id="scrollProg" aria-hidden="true"></div>
 </header>
 
 <div class="band" aria-hidden="true">
@@ -149,12 +150,13 @@
 
         <div class="readout">
           <div class="lvl" aria-live="off"><span id="lvl">0.0</span><small>%</small></div>
-          <div class="meta"><b id="rodCount">0</b> of 92 rods lit<br>Bought this cycle: <b id="treasuryInline">—</b><br>Fission target: <b id="targetInline">—</b></div>
+          <div class="meta"><b id="rodCount">0</b> of 92 rods lit<br>Bought this cycle: <b id="treasuryInline">—</b><br>Fission target: <b id="targetInline">—</b><br>Next Fission: <b id="etaInline">—</b></div>
           <div class="bar" aria-hidden="true"><div class="fill" id="barFill"></div><div class="mark"></div></div>
         </div>
 
         <div class="core-ctrl">
           <button class="chip" id="refreshBtn">Refresh now</button>
+          <button class="chip" id="shareBtn" type="button">Share on X</button>
           <span class="lbl" id="lastUpdate"></span>
           <button class="toggle" id="autoBtn" aria-pressed="true"><span></span>Auto</button>
         </div>
@@ -183,7 +185,7 @@
     <div class="gauges rv">
       <div class="gauge hud"><div class="k">Circulating supply</div><div class="v" id="gSupply"><span class="ph">offline</span></div><div class="s" id="gSupplySub">of 1,000,000,000 initial</div></div>
       <div class="gauge hud"><div class="k">Total burned</div><div class="v" id="gBurn"><span class="ph">offline</span></div><div class="s" id="gBurnPct">supply only goes down</div></div>
-      <div class="gauge hud"><div class="k">Fissions found</div><div class="v" id="gFis"><span class="ph">offline</span></div><div class="s">in the mint's recent transactions</div></div>
+      <div class="gauge hud"><div class="k">Fissions completed</div><div class="v" id="gFis"><span class="ph">offline</span></div><div class="s">counted from total burned</div></div>
       <div class="gauge hud"><div class="k">Treasury balance</div><div class="v" id="gBuys"><span class="ph">offline</span></div><div class="s" id="gSol">public burn wallet</div></div>
     </div>
     <div class="panel-grid rv">
@@ -196,6 +198,44 @@
         <h3>Public wallets</h3>
         <p class="sub">Treasury and liquidity wallets, published so anyone can audit them.</p>
         <ul class="wallets" id="walletsList"></ul>
+      </div>
+    </div>
+
+    <div class="box hud full rv">
+      <h3>Live chart</h3>
+      <p class="sub">Real price action, streamed from Dexscreener once the trading pair exists.</p>
+      <div class="chart-frame" id="chartFrame"><div class="chart-ph" id="chartPh">Chart goes live with the first trade</div></div>
+    </div>
+
+    <div class="panel-grid rv">
+      <div class="box hud">
+        <h3>Fuel calculator</h3>
+        <p class="sub">See how much of the core your buy would light up.</p>
+        <div class="calc-row">
+          <input class="calc-input" id="calcIn" type="text" inputmode="decimal" placeholder="Amount" aria-label="Buy amount" autocomplete="off">
+          <div class="seg" role="group" aria-label="Unit">
+            <button type="button" id="unitT92" aria-pressed="true">$T92</button>
+            <button type="button" id="unitSol" aria-pressed="false" disabled title="Available once trading opens">SOL</button>
+          </div>
+        </div>
+        <div class="chips" id="calcChips">
+          <button type="button" class="chip" data-amt="100000">100K</button>
+          <button type="button" class="chip" data-amt="500000">500K</button>
+          <button type="button" class="chip" data-amt="1000000">1M</button>
+          <button type="button" class="chip" data-amt="5000000">5M</button>
+        </div>
+        <div class="calc-out">
+          <div><span>Fuel counted</span><b id="calcFuel">0</b></div>
+          <div><span>Core share</span><b id="calcPct">0%</b></div>
+          <div><span>Rods lit</span><b id="calcRods">0</b></div>
+        </div>
+        <div class="calc-rods" id="calcRodsViz" aria-hidden="true"></div>
+        <p class="calc-note" id="calcNote">Each buy counts up to the per-buy cap, so no single wallet can fill the core alone.</p>
+      </div>
+      <div class="box hud">
+        <h3>Top fuelers</h3>
+        <p class="sub">Wallets that fed the most fuel into the current cycle.</p>
+        <ol class="board" id="board"></ol>
       </div>
     </div>
   </div>
@@ -241,6 +281,10 @@
       <span class="kicker">04 · Archive</span>
       <h2><em>Operator</em> log</h2>
       <p>The story of Reactor 92, unlocked chapter by chapter as the community grows.</p>
+    </div>
+    <div class="milestones hud rv">
+      <div class="ms-head"><span>Fissions completed</span><b id="msCount">0</b></div>
+      <div class="ms-track" id="msTrack"><div class="ms-fill" id="msFill"></div></div>
     </div>
     <div class="lore rv">
       <div class="tabs" role="tablist" aria-label="Chapters">
@@ -317,6 +361,7 @@
           <a id="lnkDex" target="_blank" rel="noopener">Dexscreener</a>
           <a id="lnkScan" target="_blank" rel="noopener">Solscan</a>
           <a id="lnkPump" target="_blank" rel="noopener">pump.fun</a>
+          <a id="lnkJup" target="_blank" rel="noopener">Buy on Jupiter</a>
         </div>
         <div class="facts">
           <div><span>Network</span><b>Solana</b></div>
@@ -362,6 +407,10 @@
 
 <div class="flash" id="flash" aria-hidden="true"></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="mbar" id="mbar">
+  <span>Core <b id="mbarPct">0.0%</b></span>
+  <a class="btn btn-main btn-sm" id="mbarCta" href="#comprar">Buy $T92</a>
+</div>
 
 <script src="js/app.js" defer></script>
 </body>

@@ -386,6 +386,73 @@ footer nav a:hover{color:var(--rad)}
 .rv-on .rv{opacity:0;transform:translateY(26px);transition:opacity .8s ease,transform .8s cubic-bezier(.2,.7,.2,1)}
 .rv-on .rv.in{opacity:1;transform:none}
 
+/* ---------- Scroll progress ---------- */
+.scroll-progress{position:absolute;left:0;bottom:-1px;height:2px;width:0;background:linear-gradient(90deg,var(--rad),var(--hazard));box-shadow:0 0 10px var(--rad-glow);pointer-events:none}
+
+/* ---------- Rods: flash when new fuel arrives ---------- */
+.rod.new .halo{opacity:.95;transition:none}
+.rod.new .fuel{fill:#fff}
+
+/* ---------- Live chart ---------- */
+.box.full{margin-top:14px}
+.chart-frame{position:relative;width:100%;aspect-ratio:16/7;border:1px solid var(--line);border-radius:2px;overflow:hidden;background:#050805}
+.chart-frame:not(.on){aspect-ratio:auto;height:170px}
+.chart-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.chart-ph{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:20px;font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);
+  background:repeating-linear-gradient(0deg,transparent 0 38px,rgba(168,255,46,.05) 38px 39px),repeating-linear-gradient(90deg,transparent 0 38px,rgba(168,255,46,.05) 38px 39px)}
+
+/* ---------- Fuel calculator ---------- */
+.calc-row{display:flex;gap:8px;align-items:stretch}
+.calc-input{flex:1;min-width:0;background:rgba(168,255,46,.05);border:1px solid var(--line);border-radius:2px;color:var(--ink);font-family:var(--mono);font-size:16px;font-weight:600;padding:11px 14px;transition:border-color .2s,box-shadow .2s}
+.calc-input::placeholder{color:var(--dim)}
+.calc-input:focus{outline:none;border-color:var(--rad);box-shadow:0 0 0 3px var(--rad-soft)}
+.seg{display:flex;border:1px solid var(--line);border-radius:2px;overflow:hidden;flex-shrink:0}
+.seg button{background:none;border:0;padding:0 14px;font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--muted);transition:background .2s,color .2s}
+.seg button[aria-pressed="true"]{background:var(--rad);color:#071000}
+.seg button:disabled{opacity:.35;cursor:not-allowed}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.calc-out{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:18px}
+.calc-out div{border-top:1px solid var(--line);padding-top:10px;min-width:0}
+.calc-out span{display:block;font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.calc-out b{display:block;font-family:var(--display);font-weight:800;font-size:clamp(22px,2.4vw,30px);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.calc-rods{display:grid;grid-template-columns:repeat(23,1fr);gap:4px;margin-top:16px}
+.calc-rods i{aspect-ratio:1;border-radius:50%;background:#1A1F1A;border:1px solid #2F382F;transition:background .25s,box-shadow .25s,border-color .25s}
+.calc-rods i.had{background:#3A4A1E;border-color:#56702A}
+.calc-rods i.on{background:var(--rad-hi);border-color:var(--rad);box-shadow:0 0 6px var(--rad)}
+.calc-note{margin:14px 0 0;font-size:13px;color:var(--muted)}
+.calc-note.warn{color:var(--hazard)}
+
+/* ---------- Top fuelers ---------- */
+.board{list-style:none;margin:0;padding:0}
+.board li{display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:4px 10px;align-items:center;padding:11px 0;border-bottom:1px dashed var(--line);font-family:var(--mono);font-size:13px}
+.board li:last-child{border-bottom:0}
+.board .rk{color:var(--muted);font-weight:700}
+.board li:first-child .rk{color:var(--hazard);text-shadow:0 0 8px rgba(255,210,31,.5)}
+.board .w{color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.board .w a{color:inherit;text-decoration:none}
+.board .w a:hover{color:var(--rad)}
+.board .amt{color:var(--rad);font-weight:700}
+.board .meter{grid-column:2 / -1;height:3px;background:rgba(168,255,46,.1);border-radius:2px;overflow:hidden}
+.board .meter i{display:block;height:100%;background:var(--rad);box-shadow:0 0 6px var(--rad);transition:width .5s ease}
+.board li.empty{display:block;color:var(--muted);font-family:var(--body);font-size:14px;border:0;line-height:1.6}
+
+/* ---------- Milestones ---------- */
+.milestones{padding:20px 26px 8px;margin-bottom:clamp(24px,3vw,36px)}
+.ms-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-family:var(--mono);font-size:11.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.ms-head b{font-family:var(--stencil);font-size:32px;letter-spacing:0;color:var(--rad);text-shadow:0 0 14px var(--rad-glow)}
+.ms-track{position:relative;height:6px;background:rgba(168,255,46,.1);border-radius:3px;margin:20px 10px 46px}
+.ms-fill{position:absolute;inset:0 auto 0 0;width:0;background:linear-gradient(90deg,#3E9A10,var(--rad));border-radius:3px;box-shadow:0 0 12px var(--rad-glow);transition:width .8s ease}
+.ms-stop{position:absolute;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:var(--panel);border:2px solid var(--dim);transition:background .3s,border-color .3s,box-shadow .3s}
+.ms-stop.done{border-color:var(--rad);background:var(--rad);box-shadow:0 0 12px var(--rad)}
+.ms-stop.key{border-color:var(--hazard)}
+.ms-stop.key.done{background:var(--hazard);box-shadow:0 0 12px var(--hazard)}
+.ms-stop span{position:absolute;top:24px;left:50%;transform:translateX(-50%);white-space:nowrap;font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.06em;color:var(--muted)}
+.ms-stop.done span{color:var(--rad)}
+.ms-stop.key span{left:auto;right:-6px;transform:none;color:var(--hazard)}
+
+/* ---------- Mobile action bar ---------- */
+.mbar{display:none}
+
 /* ---------- Responsive ---------- */
 @media (max-width:1060px){
   .nav a{padding:8px 8px;letter-spacing:.06em}
@@ -394,7 +461,7 @@ footer nav a:hover{color:var(--rad)}
   .hero .wrap{grid-template-columns:1fr}
   .core-wrap{max-width:620px;width:100%;margin:0 auto}
   .gauges{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .panel-grid,.buy,.lore{grid-template-columns:1fr}
+  .panel-grid,.buy,.lore{grid-template-columns:minmax(0,1fr)}
   .tabs{grid-template-columns:repeat(4,minmax(0,1fr))}
   .tab{grid-template-columns:1fr;gap:8px;text-align:center;padding:12px 8px;justify-items:center}
   .tab span{font-size:13px}
@@ -413,9 +480,17 @@ footer nav a:hover{color:var(--rad)}
   .hist-row .c{grid-row:1 / span 3;align-self:start}
   .hist-row .t{text-align:left}
   footer .wrap{grid-template-columns:1fr}
+  .chart-frame{aspect-ratio:auto;height:420px}
+  .mbar{position:fixed;left:0;right:0;bottom:0;z-index:45;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:rgba(4,6,4,.94);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-top:1px solid var(--line);font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .mbar b{color:var(--rad);font-size:15px;margin-left:6px;text-shadow:0 0 10px var(--rad-glow)}
+  body{padding-bottom:64px}
+  .toast{bottom:calc(78px + env(safe-area-inset-bottom,0px))}
 }
 @media (max-width:520px){
-  body{font-size:16px}
+  body{font-size:16px;padding-bottom:64px}
+  .calc-out{gap:8px}
+  .calc-rods{grid-template-columns:repeat(16,1fr)}
+  .milestones{padding:18px 16px 4px}
   .brand{font-size:23px}
   .brand svg{width:26px;height:26px}
   .status span{display:none}
