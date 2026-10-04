@@ -29,23 +29,22 @@ const CONFIG = {
   // last Fission keeps adding up; once it hits this target, the core reaches 100%
   // and waits for the real Fission (burn) to happen.
   //
-  // Set to 1% of INITIAL_SUPPLY: frequent enough to feel alive early on, without
-  // emptying the supply too fast. Watch the real pace after launch and adjust —
-  // raise it if Fissions fire too often, lower it if the core fills too slowly.
+  // Set to 5% of INITIAL_SUPPLY: early on pump.fun 1 SOL buys ~30M tokens, so a
+  // lower target filled almost instantly. Watch the real pace after launch and
+  // adjust — raise it if Fissions fire too often, lower it if the core fills too slowly.
   //
   // Want the core to fill SLOWER? Raise this number.
   // Want it FASTER? Lower it.
-  FISSION_VOLUME_TARGET: 10000000,
+  FISSION_VOLUME_TARGET: 50000000,
 
   // Guard against a "single whale": no single buy can count for more than this
   // toward the core, even if the real buy is bigger — stops one big buy from
-  // filling the bar on its own. Set to 10% of the target above.
-  MAX_BUY_IMPACT: 1000000,
+  // filling the bar on its own. Set to 5% of the target above (20+ buys to fill).
+  MAX_BUY_IMPACT: 2500000,
 
-  // How much the treasury needs to accumulate until the next Fission (real burn,
-  // shown in the panel). This is NOT what fills the core — that's the item above.
-  // Kept equal to FISSION_VOLUME_TARGET so the two line up: the core hits 100%
-  // right as the treasury has enough to actually burn.
+  // How much the treasury burns at each Fission (real burn, shown in the panel).
+  // This is NOT what fills the core — that's FISSION_VOLUME_TARGET above. It also
+  // drives the "Fissions completed" count (total burned / this).
   BURN_TARGET: 10000000,
 
   // How many real burns need to happen to unlock Chapter 4 of the story.
@@ -58,8 +57,15 @@ const CONFIG = {
 
   // How many recent mint transactions to scan when building the burn history AND
   // the current cycle's buy volume. Higher = more complete, but more RPC requests
-  // (consider a Helius key if you raise this a lot).
-  LOOKBACK: 40,
+  // A cycle needs 20+ buys plus the sells in between, so this has to cover a whole
+  // cycle. Parsed transactions are cached, so later refreshes only fetch new ones.
+  LOOKBACK: 200,
+
+  // How many transactions to fetch at the same time, and the minimum pause between
+  // two request starts. 110ms ≈ 9 per second, just under the free Helius limit
+  // (10/s). On a paid plan, lower RPC_GAP_MS to load the core faster.
+  RPC_CONCURRENCY: 3,
+  RPC_GAP_MS: 110,
 
   // Auto-refresh interval, in milliseconds. 0 disables it.
   POLL_MS: 30000,
@@ -81,7 +87,7 @@ function relTime(tsSeconds){
   return Math.round(h/24)+'d ago';
 }
 
-var state = { rid:0, showAll:false, burns:[], lastBurnCount:-1, fissions:0, pct:0, lit:0, seen:{}, primed:false };
+var state = { rid:0, showAll:false, burns:[], lastBurnCount:-1, fissions:0, pct:0, lit:0, seen:{}, primed:false, scanning:false, decimals:6 };
 function fmtCompactNum(n){
   if (n>=1e9) return (n/1e9).toFixed(2)+'B';
   if (n>=1e6) return (n/1e6).toFixed(n>=1e7?1:2)+'M';
@@ -195,16 +201,74 @@ function getSignatures(limit){ return rpc('getSignaturesForAddress',[CONFIG.MINT
 // swaps commonly come back as newer versioned transactions — raise the cap so
 // those aren't silently dropped (returned as null and skipped).
 function getParsedTx(sig){ return rpc('getTransaction',[sig,{encoding:'jsonParsed',maxSupportedTransactionVersion:2}]); }
+// Parses a list of signatures (newest first) with a few requests in flight at once,
+// keeping the original order. Cached results are reused; failed fetches are left
+// out of the cache so the next refresh tries them again.
+function wait(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+// Starts requests at most every RPC_GAP_MS (free RPC plans reject bursts with
+// HTTP 429), and retries a rejected one a few times with a growing pause.
+var nextSlot = 0;
+function throttledTx(sig, tries){
+  tries = tries || 0;
+  var now = Date.now(), delay = Math.max(0, nextSlot - now);
+  nextSlot = Math.max(now, nextSlot) + CONFIG.RPC_GAP_MS;
+  return wait(delay).then(function(){ return getParsedTx(sig); }).catch(function(err){
+    if (tries < 3 && /429/.test(err.message)) return wait(600*(tries+1)).then(function(){ return throttledTx(sig, tries+1); });
+    throw err;
+  });
+}
+function scanTxs(list, onProgress){
+  var out = new Array(list.length), next = 0, done = 0;
+  function collect(){
+    var acc = {burns:[], buys:[]};
+    out.forEach(function(p){ if (p){ acc.burns = acc.burns.concat(p.burns); acc.buys = acc.buys.concat(p.buys); } });
+    return acc;
+  }
+  function worker(){
+    while (next < list.length && txCache[list[next].signature]){ out[next] = txCache[list[next].signature]; next++; done++; }
+    if (next >= list.length) return Promise.resolve();
+    var i = next++, s = list[i];
+    return throttledTx(s.signature).then(function(tx){
+      var parsed = { burns:extractBurns(tx,s.signature), buys:extractBuys(tx,s.signature) };
+      if (tx) txCache[s.signature] = parsed;
+      out[i] = parsed;
+    }).catch(function(){}).then(function(){
+      done++;
+      if (onProgress) onProgress(done, list.length, collect);
+      return worker();
+    });
+  }
+  var workers = [];
+  for (var w=0; w<CONFIG.RPC_CONCURRENCY; w++) workers.push(worker());
+  return Promise.all(workers).then(collect);
+}
+// Current cycle = since the last real Fission found (or since the start of the
+// lookback window, if no burn has shown up in it yet). Buys from the project's own
+// wallets never fuel the core: only the community does.
+function cycleOf(acc){
+  var cycleStart = acc.burns.length ? acc.burns[0].time : 0;
+  var own = [CONFIG.DEV_ADDRESS, CONFIG.TREASURY_ADDRESS].filter(Boolean);
+  var community = acc.buys.filter(function(b){ return own.indexOf(b.wallet) < 0; });
+  var cycleBuys = community.filter(function(b){ return b.time > cycleStart; });
+  var volume = cycleBuys.reduce(function(sum,b){ return sum + Math.min(b.amount, CONFIG.MAX_BUY_IMPACT); }, 0);
+  var pct = CONFIG.FISSION_VOLUME_TARGET>0 ? (volume/CONFIG.FISSION_VOLUME_TARGET*100) : 0;
+  return { community:community, cycleBuys:cycleBuys, volume:volume, pct:pct };
+}
 function extractBurns(tx, sig){
   var out=[];
   if (!tx || !tx.transaction) return out;
   var allIx = [].concat(tx.transaction.message.instructions||[]);
   (tx.meta && tx.meta.innerInstructions||[]).forEach(function(group){ allIx=allIx.concat(group.instructions||[]); });
+  // only the project's own wallets can trigger a Fission: otherwise anyone burning
+  // a single token would reset the community's core
+  var own = [CONFIG.TREASURY_ADDRESS, CONFIG.DEV_ADDRESS].filter(Boolean);
   allIx.forEach(function(ix){
     if (ix.parsed && (ix.parsed.type==='burn' || ix.parsed.type==='burnChecked')){
       var info=ix.parsed.info;
-      if (info.mint===CONFIG.MINT_ADDRESS){
-        var amt = info.tokenAmount ? Number(info.tokenAmount.uiAmount) : Number(info.amount);
+      var by = info.authority || info.multisigAuthority;
+      if (info.mint===CONFIG.MINT_ADDRESS && own.indexOf(by) >= 0){
+        // burnChecked carries the UI amount; plain burn only has raw base units
+        var amt = info.tokenAmount ? Number(info.tokenAmount.uiAmount) : Number(info.amount) / Math.pow(10, state.decimals);
         out.push({ amount:amt, signature:sig, time:tx.blockTime });
       }
     }
@@ -595,6 +659,7 @@ function refresh(){
       var supply=r[0], treasury=r[1], sigs=r[2];
 
       var circ = supply.ui;
+      state.decimals = supply.decimals;
       var burned = Math.max(0, CONFIG.INITIAL_SUPPLY - circ);
       $('gSupply').textContent = nf.format(Math.round(circ));
       $('gSupplySub').textContent = 'of '+nf.format(CONFIG.INITIAL_SUPPLY)+' initial';
@@ -613,26 +678,22 @@ function refresh(){
 
       // Fission history (real burns) + community buy volume: scans the mint's
       // recent transactions for both things at once.
-      var toCheck = sigs.slice(0, CONFIG.LOOKBACK);
-      var chain = Promise.resolve({burns:[], buys:[]});
-      toCheck.forEach(function(s){
-        chain = chain.then(function(acc){
-          var hit = txCache[s.signature];
-          if (hit){
-            acc.burns = acc.burns.concat(hit.burns);
-            acc.buys = acc.buys.concat(hit.buys);
-            return acc;
-          }
-          return getParsedTx(s.signature).then(function(tx){
-            var parsed = { burns:extractBurns(tx,s.signature), buys:extractBuys(tx,s.signature) };
-            if (tx) txCache[s.signature] = parsed;
-            acc.burns = acc.burns.concat(parsed.burns);
-            acc.buys = acc.buys.concat(parsed.buys);
-            return acc;
-          }).catch(function(){ return acc; });
-        });
+      // failed transactions can't be burns or buys, so they're skipped
+      var toCheck = sigs.slice(0, CONFIG.LOOKBACK).filter(function(s){ return !s.err; });
+      // the first read fetches the whole window: show how far along it is, and let
+      // the core power up as the buys come in instead of sitting at 0%
+      state.scanning = true;
+      var scan = scanTxs(toCheck, state.primed ? null : function(done, total, collect){
+        if (myRid!==state.rid) return;
+        $('etaInline').textContent = 'reading chain… '+Math.round(done/total*100)+'%';
+        if (done % 10 === 0){
+          var partial = cycleOf(collect());
+          renderLevel(partial.pct);
+          $('treasuryInline').textContent = nf.format(Math.round(partial.volume))+' $T92';
+        }
       });
-      chain.then(function(acc){
+      scan.then(function(){ state.scanning = false; }, function(){ state.scanning = false; });
+      scan.then(function(acc){
         if (myRid!==state.rid) return;
         var burns=acc.burns, buys=acc.buys;
         state.burns = burns;
@@ -644,14 +705,7 @@ function refresh(){
         if (state.lastBurnCount>=0 && burns.length>state.lastBurnCount) playFission();
         state.lastBurnCount = burns.length;
 
-        // current cycle = since the last real Fission found (or since the start
-        // of the lookback window, if no burn has shown up in it yet)
-        var cycleStart = burns.length ? burns[0].time : 0;
-        // buys from the project's own wallets never fuel the core: only the community does
-        var own = [CONFIG.DEV_ADDRESS, CONFIG.TREASURY_ADDRESS].filter(Boolean);
-        var community = buys.filter(function(b){ return own.indexOf(b.wallet) < 0; });
-        var cycleBuys = community.filter(function(b){ return b.time > cycleStart; });
-        var volume = cycleBuys.reduce(function(sum,b){ return sum + Math.min(b.amount, CONFIG.MAX_BUY_IMPACT); }, 0);
+        var cyc = cycleOf(acc), community = cyc.community, cycleBuys = cyc.cycleBuys, volume = cyc.volume;
 
         // announce buys that weren't there on the previous read
         var fresh = community.filter(function(b){ return !state.seen[b.signature]; });
@@ -661,8 +715,7 @@ function refresh(){
           toast('☢ +'+fmtCompactNum(big.amount)+' $T92 of fuel from '+short(big.wallet,4,4)+(fresh.length>1 ? ' (+'+(fresh.length-1)+' more)' : ''));
         }
 
-        var pct = CONFIG.FISSION_VOLUME_TARGET>0 ? (volume/CONFIG.FISSION_VOLUME_TARGET*100) : 0;
-        renderLevel(pct);
+        renderLevel(cyc.pct);
         state.primed = true;
         $('treasuryInline').textContent = nf.format(Math.round(volume))+' $T92';
         $('targetInline').textContent = nf.format(CONFIG.FISSION_VOLUME_TARGET)+' $T92';
@@ -732,7 +785,7 @@ $('refreshBtn').addEventListener('click', refresh);
 var autoOn=true, pollTimer=null;
 function schedulePoll(){
   clearInterval(pollTimer);
-  if (autoOn && CONFIG.POLL_MS>0) pollTimer=setInterval(function(){ if (!document.hidden) refresh(); }, CONFIG.POLL_MS);
+  if (autoOn && CONFIG.POLL_MS>0) pollTimer=setInterval(function(){ if (!document.hidden && !state.scanning) refresh(); }, CONFIG.POLL_MS);
 }
 // Polling is skipped while the tab is hidden; catch up as soon as it's visible again.
 document.addEventListener('visibilitychange', function(){
