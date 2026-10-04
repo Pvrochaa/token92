@@ -232,10 +232,13 @@ function extractBuys(tx, sig){
 }
 
 /* ---------- Public wallets ---------- */
+// The dev wallet is deliberately NOT listed here — CONFIG.DEV_ADDRESS is still
+// used internally (its buys are excluded from the core-fill volume) but isn't
+// displayed. Note it's still discoverable elsewhere: pump.fun tags the creator
+// wallet on the token's own page regardless of what this site shows.
 function renderWallets(){
   var rows = [
     ['Burn treasury', CONFIG.TREASURY_ADDRESS, 'Holds the tokens destroyed at each Fission'],
-    ['Dev wallet', CONFIG.DEV_ADDRESS, 'Tagged as creator on pump.fun'],
     ['Liquidity', CONFIG.LIQUIDITY_ADDRESS, 'Trading pool once the curve graduates']
   ];
   $('walletsList').innerHTML = rows.map(function(r){
