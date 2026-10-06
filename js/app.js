@@ -77,6 +77,10 @@ var nf = new Intl.NumberFormat('en-US');
 var nf1 = new Intl.NumberFormat('en-US',{minimumFractionDigits:1,maximumFractionDigits:1});
 var $ = function(id){return document.getElementById(id);};
 function short(s,a,b){ a=a||6; b=b||6; return s.length>a+b+1 ? s.slice(0,a)+'…'+s.slice(-b) : s; }
+// Defense in depth: on-chain addresses/signatures are base58 (never contain HTML-special
+// chars), but escaping anything interpolated into innerHTML keeps that true by construction
+// rather than by assumption, so a future free-text field (e.g. token metadata) can't become XSS.
+function esc(s){ return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 function relTime(tsSeconds){
   if(!tsSeconds) return '';
   var m = Math.round((Date.now()/1000 - tsSeconds)/60);
@@ -327,7 +331,7 @@ function renderWallets(){
   $('walletsList').innerHTML = rows.map(function(r){
     // addresses stay hidden until launch so snipers can't watch the dev wallet for the creation tx
     if (!r[1] || !CONFIG.MINT_ADDRESS) return '<li class="pending"><span class="n">'+r[0]+'</span><span class="a">'+r[2]+'</span><span class="tag">at launch</span></li>';
-    return '<li><span class="n">'+r[0]+'</span><span class="a">'+r[1]+'</span><button class="btn btn-ghost btn-sm" data-copy="'+r[1]+'">Copy</button></li>';
+    return '<li><span class="n">'+r[0]+'</span><span class="a">'+esc(r[1])+'</span><button class="btn btn-ghost btn-sm" data-copy="'+esc(r[1])+'">Copy</button></li>';
   }).join('');
 }
 
@@ -372,8 +376,8 @@ function renderHistory(){
     $('histBody').innerHTML = list.map(function(f,i){
       return '<div class="hist-row"><span class="c">#'+(list.length-i)+'</span>'+
         '<span class="burn">'+nf.format(f.amount)+' $T92</span>'+
-        '<span class="tx"><code title="'+f.signature+'">'+short(f.signature,6,6)+'</code><button data-copy="'+f.signature+'">Copy</button>'+
-          '<button data-share-burn="'+(list.length-i)+'|'+Math.round(f.amount)+'|'+f.signature+'">Share</button></span>'+
+        '<span class="tx"><code title="'+esc(f.signature)+'">'+esc(short(f.signature,6,6))+'</code><button data-copy="'+esc(f.signature)+'">Copy</button>'+
+          '<button data-share-burn="'+(list.length-i)+'|'+Math.round(f.amount)+'|'+esc(f.signature)+'">Share</button></span>'+
         '<span class="t">'+relTime(f.time)+'</span></div>';
     }).join('');
   }
@@ -435,7 +439,7 @@ function renderBoard(cycleBuys){
   var max = rows[0].fuel;
   board.innerHTML = rows.map(function(r,i){
     return '<li><span class="rk">#'+(i+1)+'</span>'+
-      '<span class="w"><a href="https://solscan.io/account/'+r.w+'" target="_blank" rel="noopener">'+short(r.w,4,4)+'</a></span>'+
+      '<span class="w"><a href="https://solscan.io/account/'+esc(r.w)+'" target="_blank" rel="noopener">'+esc(short(r.w,4,4))+'</a></span>'+
       '<span class="amt">'+fmtCompactNum(r.fuel)+'</span>'+
       '<span class="meter"><i style="width:'+(r.fuel/max*100).toFixed(1)+'%"></i></span></li>';
   }).join('');
@@ -457,7 +461,7 @@ function etaText(cycleBuys, volume){
 /* ---------- Live buys feed ---------- */
 function renderBuyFeed(buys){
   $('feed').innerHTML = buys.slice(0,6).map(function(b){
-    return '<li><span><a href="https://solscan.io/tx/'+b.signature+'" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">'+short(b.wallet,4,4)+' +'+fmtCompactNum(b.amount)+'</a></span><b>'+relTime(b.time)+'</b></li>';
+    return '<li><span><a href="https://solscan.io/tx/'+esc(b.signature)+'" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">'+esc(short(b.wallet,4,4))+' +'+fmtCompactNum(b.amount)+'</a></span><b>'+relTime(b.time)+'</b></li>';
   }).join('');
 }
 
@@ -538,7 +542,7 @@ $('calcChips').addEventListener('click', function(e){
 function renderFeed(sigs){
   var feed=$('feed');
   feed.innerHTML = sigs.slice(0,6).map(function(s){
-    return '<li><span><a href="https://solscan.io/tx/'+s.signature+'" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">'+short(s.signature,6,6)+'</a></span><b>'+relTime(s.blockTime)+'</b></li>';
+    return '<li><span><a href="https://solscan.io/tx/'+esc(s.signature)+'" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">'+esc(short(s.signature,6,6))+'</a></span><b>'+relTime(s.blockTime)+'</b></li>';
   }).join('') || '<li class="empty">No transactions found yet.</li>';
 }
 
